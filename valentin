@@ -1,0 +1,37 @@
+#!/usr/bin/env python
+import sys,os
+sys.path.insert(0,'.')
+import logging
+import utils.log as log
+try:
+    log.level = logging.DEBUG
+    #log.level = logging.INFO
+    log.level = logging.WARNING
+    log.debug("Importing hwdetector")
+    import hwdetector
+
+    log.debug("Instantiate HwDetector")
+    hwd=hwdetector.HwDetector()
+    #hwd.all_plugins_are_needed=True
+    #hwd.MAX_RUNNING_TIME = 1
+    #hwd.fake_capabilities={'IAMGOD':'yes'}
+    log.debug("Calling run plugins")
+    #ret = hwd.run(needs=['INTERNAL_INTERFACE'])
+    ret = hwd.run()
+    #print('\nCapabilities stored (with values)\n')
+    #hwd.printCapabilities()
+    print('\nCapabilities stored({}) = {}\n'.format(len(hwd.capabilities_stored),','.join(hwd.capabilities_stored)))
+    print("Total running time: {}".format(hwd.RUNNING_TIME))
+
+    if ret:
+        print "Exit code = 0"
+        sys.exit(0)
+    else:
+        print "Exit code = 1"
+        sys.exit(1)
+except Exception as e:
+    print("Exception occurred: {}".format(e))
+    print "Exit code = 1"
+    sys.exit(1)
+    pass
+
