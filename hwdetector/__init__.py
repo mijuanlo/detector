@@ -187,7 +187,7 @@ class HwDetector:
                                 break
 
 
-                    if add: # class have resolved all needs
+                    if add: # class has resolved all needs
                         #pending.remove(classname)
                         to_remove.append(add)
                         self.order.append(add)

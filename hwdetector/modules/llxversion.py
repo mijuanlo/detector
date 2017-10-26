@@ -7,7 +7,7 @@ import os
 log.debug("File "+__name__+" loaded")
 
 class LlxVersion(Detector):
-    _PROVIDES=["LLIUREX_VERSION","LLIUREX_RELEASE","LLIUREX_SESSION_TYPE","HAVE_MIRROR","ARCHITECTURE"]
+    _PROVIDES=["LLIUREX_VERSION","LLIUREX_RELEASE","LLIUREX_SESSION_TYPE","HAS_MIRROR","ARCHITECTURE"]
     _NEEDS = []
     def run(self,*args,**kwargs):
         d={}
@@ -27,9 +27,9 @@ class LlxVersion(Detector):
                     output['LLIUREX_SESSION_TYPE']=x
 
             if d['MIRROR'] == 'True':
-                output['HAVE_MIRROR'] = True
+                output['HAS_MIRROR'] = True
             else:
-                output['HAVE_MIRROR'] = False
+                output['HAS_MIRROR'] = False
         except:
             pass
 

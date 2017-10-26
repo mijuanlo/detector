@@ -11,9 +11,12 @@ class LlxAlltests(Detector):
     _PROVIDES=['ALL_TESTS']
 
     def run(self,*args,**kwargs):
-        if kwargs['LLXNETWORK_TEST']:
-            print "Network OK!"
-        if kwargs['LLXSYSTEM_TEST']:
-            print "System OK!"
-        output={'ALL_TESTS':True}
+        ret=True
+        for test in self._NEEDS:
+            if kwargs[test]['status']:
+                print "Testing {} was OK!".format(test)
+            else:
+                print "Testing {} was Failed!\n\t{}".format(test,kwargs[test]['msg'])
+                ret=False
+        output={'ALL_TESTS':ret}
         return output

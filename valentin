@@ -16,8 +16,8 @@ try:
     #hwd.MAX_RUNNING_TIME = 1
     #hwd.fake_capabilities={'IAMGOD':'yes'}
     log.debug("Calling run plugins")
-    #ret = hwd.run(needs=['ALL_TESTS'])
-    ret = hwd.run(needs=['LLXSYSTEM_TEST','LLXNETWORK_TEST'])
+    ret = hwd.run(needs=['ALL_TESTS'])
+    #ret = hwd.run(needs=['LLXSYSTEM_TEST','LLXNETWORK_TEST'])
     #ret = hwd.run()
     #print('\nCapabilities stored (with values)\n')
     #hwd.printCapabilities()

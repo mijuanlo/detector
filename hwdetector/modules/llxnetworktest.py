@@ -11,5 +11,5 @@ class LlxNetworkTest(Detector):
     _PROVIDES=['LLXNETWORK_TEST']
 
     def run(self,*args,**kwargs):
-        output={'LLXNETWORK_TEST':True}
+        output={'LLXNETWORK_TEST':{'status':False,'msg':'Network seems down'}}
         return output

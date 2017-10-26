@@ -11,5 +11,5 @@ class LlxSystemTest(Detector):
     _PROVIDES=['LLXSYSTEM_TEST']
 
     def run(self,*args,**kwargs):
-        output={'LLXSYSTEM_TEST':True}
+        output={'LLXSYSTEM_TEST':{'status':True,'msg':'OK!'}}
         return output
