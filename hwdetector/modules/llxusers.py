@@ -51,7 +51,7 @@ class LlxUsers(Detector):
         for (u,udata) in users:
             #TEST HOME
             if os.path.exists(udata['homeDirectory'][0]):
-                output[u] = {'HAVE_HOME': True}
+                output[u] = {'HAS_HOME': True}
 
                 homedir=udata['homeDirectory'][0]
                 user=udata['uid'][0]
@@ -68,13 +68,13 @@ class LlxUsers(Detector):
                 except:
                     output[u]['PERM_OK']=False
             else:
-                output[u]={'HAVE_HOME': False}
+                output[u]={'HAS_HOME': False}
 
         # TEACHERS
         for (u,udata) in teachers:
             #TEST HOME
             if os.path.exists(udata['homeDirectory'][0]):
-                output[u] = {'HAVE_HOME': True}
+                output[u] = {'HAS_HOME': True}
 
                 homedir=udata['homeDirectory'][0]
                 user=udata['uid'][0]
@@ -92,13 +92,13 @@ class LlxUsers(Detector):
                     output[u]['PERM_OK']=False
 
             else:
-                output[u]={'HAVE_HOME': False}
+                output[u]={'HAS_HOME': False}
 
         # ADMINS
         for (u,udata) in admins:
             #TEST HOME
             if os.path.exists(udata['homeDirectory'][0]):
-                output[u] = {'HAVE_HOME': True}
+                output[u] = {'HAS_HOME': True}
 
                 homedir=udata['homeDirectory'][0]
                 user=udata['uid'][0]
@@ -116,6 +116,6 @@ class LlxUsers(Detector):
                     output[u]['PERM_OK']=False
 
             else:
-                output[u]={'HAVE_HOME': False}
+                output[u]={'HAS_HOME': False}
 
         return {'USER_TEST':output}
