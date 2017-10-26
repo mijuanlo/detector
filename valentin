@@ -5,8 +5,8 @@ import logging
 import utils.log as log
 try:
     log.level = logging.DEBUG
-    #log.level = logging.INFO
-    log.level = logging.WARNING
+    log.level = logging.INFO
+    #log.level = logging.WARNING
     log.debug("Importing hwdetector")
     import hwdetector
 
@@ -16,11 +16,12 @@ try:
     #hwd.MAX_RUNNING_TIME = 1
     #hwd.fake_capabilities={'IAMGOD':'yes'}
     log.debug("Calling run plugins")
-    #ret = hwd.run(needs=['INTERNAL_INTERFACE'])
-    ret = hwd.run()
+    #ret = hwd.run(needs=['ALL_TESTS'])
+    ret = hwd.run(needs=['LLXSYSTEM_TEST','LLXNETWORK_TEST'])
+    #ret = hwd.run()
     #print('\nCapabilities stored (with values)\n')
     #hwd.printCapabilities()
-    print('\nCapabilities stored({}) = {}\n'.format(len(hwd.capabilities_stored),','.join(hwd.capabilities_stored)))
+    #print('\nCapabilities stored({}) = {}\n'.format(len(hwd.capabilities_stored),','.join(hwd.capabilities_stored)))
     print("Total running time: {}".format(hwd.RUNNING_TIME))
 
     if ret:

@@ -69,7 +69,11 @@ class HwDetector:
             for k in sorted(self.capabilities.keys()):
                 if k in self.capabilities_stored:
                     if not k.startswith('HELPER'):
-                        print("{} = {}".format(k,self.capabilities[k]))
+                        maxval=200
+                        value=str(self.capabilities[k])
+                        if len(value) > maxval:
+                            value=value[:maxval]+'.....'
+                        print("{} = {}".format(k,value))
 
     def _classify(self,*args,**kwargs):
         run_needs=[]
@@ -212,20 +216,37 @@ class HwDetector:
             log.debug('Endloop classifier')
 
             for r in to_remove:
-                pending.remove(r)
+                if r in pending:
+                    pending.remove(r)
                 still_ordering = True
 
             for n in more_needs:
-                resolved_needs.append(n)
+                if n not in resolved_needs:
+                    resolved_needs.append(n)
                 still_ordering=True
 
             if still_ordering == False: # none of pending plugins can satisfy more dependencies
                 if run_needs:
+                    not_found=[]
                     for x in resolved_needs:
                         if x not in self.capabilities:
-                            log.error("Unable to continue, couldn't satisfy all dependencies for needed plugin")
-                            self.aborting = True
-                            break
+                            not_found.append(x)
+                    if not_found:
+                        log.error("Unable to continue, couldn't satisfy all dependencies for needed plugin ({})".format(not_found))
+                        self.aborting = True
+                    else:
+                        for pl in need_run_plugin:
+                            add=pl
+                            for need in self.pm.classes[pl]._NEEDS:
+                                if need not in self.capabilities:
+                                    add=None
+                                    break
+                            if not add:
+                                log.error("Disabling class {} needed to run due to unresolved dependencies".format(pending_class))
+                                self.aborting=True
+                                break
+                            else:
+                                self.order.append(add)
                 else:
                     for pending_class in pending:
                         log.warning("Disabling class {} due to unresolved dependencies".format(pending_class))
