@@ -218,12 +218,12 @@ class HwDetector:
             for r in to_remove:
                 if r in pending:
                     pending.remove(r)
-                still_ordering = True
+                    still_ordering = True
 
             for n in more_needs:
                 if n not in resolved_needs:
                     resolved_needs.append(n)
-                still_ordering=True
+                    still_ordering=True
 
             if still_ordering == False: # none of pending plugins can satisfy more dependencies
                 if run_needs:
