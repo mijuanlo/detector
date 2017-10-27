@@ -184,7 +184,6 @@ class LlxLdap(Detector):
                                 elif ipalias=='254':
                                     mode='MASTER'
 
-
         out.update( {'LDAP_INFO':output,'LDAP_MODE':mode})
 
         return out

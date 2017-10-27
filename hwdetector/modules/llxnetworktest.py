@@ -24,11 +24,17 @@ class LlxNetworkTest(Detector):
 
         if resolution['UNRESOLVED']:
             nr=','.join(resolution['UNRESOLVED'])
-            msg.append(nr+' not reachable')
+            msg.append('({}) not resolvable'.format(nr))
             status=False
         if resolution['RESOLVED']:
             nr=','.join(resolution['RESOLVED'])
-            msg.append(nr+'Ok! it\'s reachable ')
+            msg.append('({}) Ok! it\'s resolvable'.format(nr))
+            if resolution['UNREACHABLE']:
+                nr=','.join(resolution['UNREACHABLE'])
+                msg.append('({}) not reachable'.format(nr))
+                status=False
+            else:
+                msg.append('({}) it\'s reachable'.format(nr))
 
         msg='\n'.join(msg)
         output={'LLXNETWORK_TEST':{'status':status,'msg':msg}}

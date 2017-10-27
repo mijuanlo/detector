@@ -16,7 +16,7 @@ class LlxAlltests(Detector):
             if kwargs[test]['status']:
                 print "Testing {} was OK!".format(test)
             else:
-                print "Testing {} was Failed!\n\t{}".format(test,kwargs[test]['msg'])
+                print "Testing {} was Failed!\n{}".format(test,kwargs[test]['msg'])
                 ret=False
         output={'ALL_TESTS':ret}
         return output

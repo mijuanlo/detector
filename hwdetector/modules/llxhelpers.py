@@ -9,7 +9,7 @@ import sys
 log.debug("File "+__name__+" loaded")
 
 class LlxHelpers(Detector):
-    _PROVIDES = ['HELPER_UNCOMMENT',"HELPER_GET_FILE_FROM_NET",'HELPER_FILE_FIND_LINE','HELPER_DEMOTE']
+    _PROVIDES = ['HELPER_UNCOMMENT',"HELPER_GET_FILE_FROM_NET",'HELPER_FILE_FIND_LINE','HELPER_DEMOTE','HELPER_CHECK_ROOT']
     _NEEDS = []
 
     # def _close_stderr(self):
@@ -131,10 +131,17 @@ class LlxHelpers(Detector):
             return False
         return True
 
+    def check_root(self,*args,**kwargs):
+        if os.geteuid() == 0:
+            return True
+        else:
+            return False
+
     def run(self,*args,**kwargs):
         return {
             'HELPER_UNCOMMENT':{'code':self.uncomment,'glob':globals()},
             'HELPER_GET_FILE_FROM_NET': {'code': self.get_file_from_net, 'glob': globals()},
             'HELPER_FILE_FIND_LINE':{'code': self.file_find_line, 'glob': globals()},
-            'HELPER_DEMOTE':{'code':self.demote,'glob':globals()}
+            'HELPER_DEMOTE':{'code':self.demote,'glob':globals()},
+            'HELPER_CHECK_ROOT':{'code':self.check_root,'glob':globals()}
                 }

@@ -27,6 +27,7 @@ class HwDetector:
         self.RUNNING_TIME = None
         self.order = []
         self.capabilities = {}
+        self.mapping = {}
         self.fake_capabilities = {}
         self.capabilities_stored = []
         self.helpers = {}
@@ -79,6 +80,8 @@ class HwDetector:
         run_needs=[]
         resolved_needs = []
         free_add_plugins = []
+        self.all_needs= []
+        self.all_provides = []
 
         if 'needs' in kwargs:
             run_needs=kwargs['needs']
@@ -91,10 +94,29 @@ class HwDetector:
         empty_provides = []
 
         for classname in self.pm.classes:
-            log.debug('Class: {} needs {}'.format(classname,self.pm.classes[classname]._NEEDS))
-            log.debug('Class: {} provides {}'.format(classname, self.pm.classes[classname]._PROVIDES))
+            class_provides = self.pm.classes[classname]._PROVIDES
+            class_needs = self.pm.classes[classname]._NEEDS
 
-            if self.pm.classes[classname]._PROVIDES == None or self.pm.classes[classname]._NEEDS == None:
+            log.debug('Class: {} needs {}'.format(classname,class_needs))
+            log.debug('Class: {} provides {}'.format(classname,class_provides))
+
+            for x in class_provides:
+                if x not in self.mapping:
+                    self.mapping[x]={'PROVIDED':[classname],'NEEDED':[]}
+                else:
+                    self.mapping[x]['PROVIDED'].append(classname)
+            for x in class_needs:
+                if x not in self.mapping:
+                    self.mapping[x]={'PROVIDED':[],'NEEDED':[classname]}
+                else:
+                    self.mapping[x]['NEEDED'].append(classname)
+
+            self.all_provides.extend(x for x in self.mapping if self.mapping[x]['PROVIDED'] and x not in self.all_provides)
+            self.all_needs.extend(x for x in self.mapping if self.mapping[x]['NEEDED'] and x not in self.all_needs)
+            #self.all_provides.extend([x for x in self.pm.classes[classname]._PROVIDES if x not in self.all_provides])
+            #self.all_needs.extend([x for x in self.pm.classes[classname]._NEEDS if x not in self.all_needs])
+
+            if class_provides == None or class_needs == None:
                 log.warning("Plugin {} with empty provides and needs, maybe it's using base class attributes !!! disabling plugin...".format(classname))
                 if self.all_plugins_are_needed:
                     log.error("Unable to continue, all plugins are needed to run properly")
@@ -102,7 +124,7 @@ class HwDetector:
                 empty_provides.append(classname)
                 continue
             # Disable plugins that not provides nothing
-            if not self.pm.classes[classname]._PROVIDES:
+            if not class_provides:
                 log.warning("Plugin {} disabled because not providing anything!".format(classname))
                 if self.all_plugins_are_needed:
                     log.error("Unable to continue, all plugins are needed to run properly")
@@ -110,29 +132,35 @@ class HwDetector:
                 empty_provides.append(classname)
                 continue
             # Add plugins that only provides
-            if not self.pm.classes[classname]._NEEDS and self.pm.classes[classname]._PROVIDES:
+            if not class_needs and class_provides:
                 free_add_plugins.append(classname)
                 if not run_needs:
                     add=True
                 else:
                     add=False
                     for x in run_needs:
-                        if x in self.pm.classes[classname]._PROVIDES:
+                        if x in class_provides:
                             add=True
                             break
                 if add:
                     self.order.append(classname)
-                    for x in self.pm.classes[classname]._PROVIDES:
+                    for x in class_provides:
                         if x:
                             self.capabilities[x] = None
                 else:
                     pending.append(classname)
             else:
                 for x in run_needs:
-                    if x in self.pm.classes[classname]._PROVIDES:
+                    if x in class_provides:
                         need_run_plugin.append(classname)
-                        resolved_needs.extend(self.pm.classes[classname]._NEEDS)
+                        resolved_needs.extend(class_needs)
                 pending.append(classname)
+
+        missing = [ x for x in self.all_needs if x not in [ y for y in self.all_provides]]
+        not_necessary = [ x for x in self.all_provides if x not in [y for y in self.all_needs]]
+
+        if not_necessary:
+            log.warning('Provided {} not used by anybody'.format(','.join(not_necessary)))
 
         for i in empty_provides:
             log.warning("Disabling class {} not providing anything".format(i))
@@ -141,6 +169,17 @@ class HwDetector:
                 self.aborting = True
             del self.pm.classes[i]
 
+        for x in missing:
+            log.error('Need {} not provided by any plugin'.format(x))
+            if self.all_plugins_are_needed:
+                log.error("Unable to continue, all plugins are needed to run properly")
+                self.aborting = True
+            for pl in self.mapping[x]['NEEDED']:
+                if pl in self.pm.classes:
+                    del self.pm.classes[pl]
+                    self.mapping[x]['NEEDED'].remove(pl)
+                    pending.remove(pl)
+
         if self.fake_capabilities:
             for x in self.fake_capabilities:
                 self.capabilities[x] = self.fake_capabilities[x]
@@ -148,16 +187,18 @@ class HwDetector:
         if run_needs:
             for nr in need_run_plugin:
                 add=False
-                for need in self.pm.classes[nr]._NEEDS:
+                class_needs=self.pm.classes[nr]._NEEDS
+                class_provides=self.pm.classes[nr]._PROVIDES
+                for need in class_needs:
                     if need not in self.capabilities:
                         for fp in free_add_plugins:
-                            if fp not in self.order and need in self.pm.classes[fp]._PROVIDES:
+                            if fp not in self.order and need in class_provides:
                                 add=fp
                                 break
                         if add and add not in self.order:
                             self.order.append(add)
-                            resolved_needs.extend(self.pm.classes[add]._NEEDS)
-                            for x in self.pm.classes[add]._PROVIDES:
+                            resolved_needs.extend(class_needs)
+                            for x in class_provides:
                                 if x:
                                     self.capabilities[x] = None
                             if add in pending:
@@ -173,7 +214,8 @@ class HwDetector:
             if x not in self.capabilities:
                 still_missing_for_run=True
                 break
-        while pending != [] and still_ordering and still_missing_for_run:
+
+        while pending != [] and still_ordering and still_missing_for_run and not self.aborting:
             still_ordering=False # Detect full loop without changing anything
             to_remove=[]
             more_needs=[]
@@ -231,12 +273,26 @@ class HwDetector:
                     for x in resolved_needs:
                         if x not in self.capabilities:
                             not_found.append(x)
+
                     if not_found:
                         if self.is_classified:
                             str='couldn\'t satisfy all dependencies for needed plugin'
                         else:
-                            str='maybe missing or ciclic dependency'
-                        log.error("Unable to continue, {} NotFound providers for:({})".format(str,','.join(not_found)))
+                            if self.pm.found_duplicates:
+                                str='maybe missing dependency?'
+                            else:
+                                str='maybe ciclic dependency?'
+
+                            # Get plugins related to cycle
+                            related=[]
+                            for plug in self.pm.classes:
+                                for prov in self.pm.classes[plug]._PROVIDES:
+                                    if prov in not_found and plug not in related:
+                                        related.append(plug)
+
+                            str+="\nPlugins related with cycle: {}".format(','.join(related))
+
+                        log.error("Unable to continue, {} !!!\nNotFound providers for ({})".format(str,','.join(not_found)))
                         self.aborting = True
                     else:
                         for pl in need_run_plugin:
@@ -378,6 +434,8 @@ class HwDetector:
                                                                                                                 provide,
                                                                                                                 out_stripped,
                                                                                                                 pinfo['rtime']))
+                                    if not out_stripped:
+                                        log.warning("Capability {} has empty value {}".format(provide,str(out_stripped)))
                                     self.capabilities[provide] = out_stripped
                                     self.capabilities_stored.append(provide)
                                 else: # provide not in output

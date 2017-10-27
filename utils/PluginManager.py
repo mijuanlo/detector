@@ -22,6 +22,7 @@ def load_module(module_path, filename):
 
 class PluginManager(object):
     def __init__(self):
+        self.found_duplicates=False
         self.modules = {}
         self.classes = {}
         self.found = []
@@ -33,6 +34,7 @@ class PluginManager(object):
             if module:
                 if module.__name__ in self.modules:
                     log.error("Duplicated module found {} unable to continue processing".format(module.__name__))
+                    self.found_duplicates=True
                     continue
                 self.modules[module.__name__] = module
                 self._extract_classes(module,typeobj)
@@ -49,6 +51,7 @@ class PluginManager(object):
                     #log.info("Found plugin: %s.%s %s" % (module.__name__, name, version))
                     if name in self.classes:
                         log.error("Duplicated class {} found into module {}, unable to add".format(name,module.__name__))
+                        self.found_duplicates=True
                         continue
                     self.found.append("{}.{}".format(module.__name__, name))
                     self.classes[name] = obj
