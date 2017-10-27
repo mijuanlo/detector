@@ -84,6 +84,7 @@ class LlxNetwork(Detector):
                                     output[iface].update({'alias' + str(aliasnum) + '_' + x: d[x]})
                                 aliasnum = aliasnum + 1
                             else:
+                                #d.update({'nalias':0})
                                 output[iface].update(d)
                         else:
                             output[iface].update(d)

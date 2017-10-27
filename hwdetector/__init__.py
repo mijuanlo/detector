@@ -218,12 +218,12 @@ class HwDetector:
             for r in to_remove:
                 if r in pending:
                     pending.remove(r)
-                still_ordering = True
+                    still_ordering = True
 
             for n in more_needs:
                 if n not in resolved_needs:
                     resolved_needs.append(n)
-                still_ordering=True
+                    still_ordering=True
 
             if still_ordering == False: # none of pending plugins can satisfy more dependencies
                 if run_needs:
@@ -232,7 +232,11 @@ class HwDetector:
                         if x not in self.capabilities:
                             not_found.append(x)
                     if not_found:
-                        log.error("Unable to continue, couldn't satisfy all dependencies for needed plugin ({})".format(not_found))
+                        if self.is_classified:
+                            str='couldn\'t satisfy all dependencies for needed plugin'
+                        else:
+                            str='maybe missing or ciclic dependency'
+                        log.error("Unable to continue, {} NotFound providers for:({})".format(str,','.join(not_found)))
                         self.aborting = True
                     else:
                         for pl in need_run_plugin:
@@ -260,17 +264,22 @@ class HwDetector:
         self.MAX_PROCESSES = len(self.order)
         log.info("Plugin order calculated: {}".format(','.join(self.order)))
         self.is_classified = True
+        if self.aborting:
+            return False
+        else:
+            return True
 
     def run(self,*args,**kwargs):
+        ret=True
         if not self.is_classified:
-            self._classify(**kwargs)
+            if not self._classify(**kwargs):
+                ret=False
         else:
             log.info("Running all plugins")
 
         if not self.START_RUNNING_TIME:
             self.START_RUNNING_TIME = time.time()
 
-        ret = True
         procs = [None]* self.MAX_PROCESSES
         done=None
         remaning=copy.copy(self.order)
@@ -304,7 +313,7 @@ class HwDetector:
                         obj = self.pm.classes[plug]()
 
                         for need in obj._NEEDS:
-                            if need and need in self.capabilities.keys() and self.capabilities[need] != None:
+                            if need and need in self.capabilities.keys():
                                 if need.lower()[0:6] == 'helper':
                                     f=pickle.loads(self.helpers[need])
                                     dummy_func=types.FunctionType(f['code'].__code__,f['glob'],f['code'].__code__.co_name)
@@ -423,7 +432,10 @@ class HwDetector:
                 for pinfo in procs:
                     if not pinfo or pinfo['rtime'] == None:
                         done = None
-                        time.sleep(0.01)
+                        timesleep=0.01
+                        if log.level < 20:
+                            timesleep=0.5
+                        time.sleep(timesleep)
                         break
 
         if done == False:

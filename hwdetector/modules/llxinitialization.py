@@ -9,7 +9,7 @@ import json
 log.debug("File "+__name__+" loaded")
 
 class LlxInitialization(Detector):
-    _NEEDS = ['HELPER_CHECK_OPEN_PORT','HELPER_CHECK_NS','HELPER_UNCOMMENT','IAMGOD','LDAP_MODE']
+    _NEEDS = ['HELPER_CHECK_OPEN_PORT','HELPER_CHECK_NS','HELPER_UNCOMMENT','LDAP_MODE']
     _PROVIDES = ['HOSTNAME','N4D_VARS','N4D_STATUS','N4D_MODULES','SERVER_LDAP','INTERNAL_INTERFACE','EXTERNAL_INTERFACE']
 
     def check_n4d(self,*args,**kwargs):

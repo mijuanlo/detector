@@ -10,7 +10,7 @@ import hashlib
 log.debug("File "+__name__+" loaded")
 
 class LlxLdap(Detector):
-    _NEEDS = ['HELPER_FILE_FIND_LINE','HELPER_UNCOMMENT','HELPER_CHECK_OPEN_PORT','HELPER_DEMOTE']
+    _NEEDS = ['HELPER_FILE_FIND_LINE','HELPER_UNCOMMENT','HELPER_CHECK_OPEN_PORT','HELPER_DEMOTE','NETINFO']
     _PROVIDES = ['LDAP_INFO','LDAP_MODE','LDAP_MASTER_IP']
 
     def check_files(self,*args,**kwargs):
@@ -139,6 +139,7 @@ class LlxLdap(Detector):
             init_done=True
         except:
             init_done=False
+
         if tree_config:
             good_pass=False
             if tree_config['config']['{1}mdb']['olcRootPW:'] and 'cn=admin,dc=ma5,dc=lliurex,dc=net' in tree_config['config']['{1}mdb']['olcRootDN']:
@@ -157,20 +158,32 @@ class LlxLdap(Detector):
         if output['PORTS']['636']:
             output['CONFIG']=self.get_ldap_config()
             mode='UNKNOWN'
-            if 'CONFIG' in output and output['CONFIG']['INITIALIZED']:
-                if 'Replicators' in output['CONFIG']['DB']['net']['lliurex']['ma5']['Groups']:
-                    mode='MASTER'
-                else:
-                    if 'olcSyncrepl' in output['CONFIG']['CONFIG']['config']['{1}mdb'] and 'olcUpdateRef' in output['CONFIG']['CONFIG']['config']['{1}mdb']:
-                        mode='SLAVE'
-                        if output['CONFIG']['CONFIG']['config']['{1}mdb']['olcSyncrepl'][0]:
-                            m=re.search(r'provider=ldapi?://(?P<LDAP_MASTER_IP>\d+\.\d+\.\d+\.\d+)',output['CONFIG']['CONFIG']['config']['{1}mdb']['olcSyncrepl'][0])
-                            if m:
-                                out.update(m.groupdict())
-                    else:
-                        mode='INDEP'
-            else:
+            try:
+                test=output['CONFIG']['INITIALIZED']
+            except:
                 mode='UNNINITIALIZED'
+            try:
+                test=output['CONFIG']['CONFIG']['config']['{1}mdb']['olcSyncrepl']
+                test=output['CONFIG']['CONFIG']['config']['{1}mdb']['olcUpdateRef']
+                mode='SLAVE'
+                if output['CONFIG']['CONFIG']['config']['{1}mdb']['olcSyncrepl'][0]:
+                    m=re.search(r'provider=ldapi?://(?P<LDAP_MASTER_IP>\d+\.\d+\.\d+\.\d+)',output['CONFIG']['CONFIG']['config']['{1}mdb']['olcSyncrepl'][0])
+                    if m:
+                        out.update(m.groupdict())
+            except:# indep or master(running without permissions)
+                mode='INDEPENDENT'
+                netinfo=kwargs['NETINFO']
+                if netinfo:
+                    aliased_interfaces = [ k for k in netinfo if 'nalias' in netinfo[k] and netinfo[k]['nalias'] > 0 ]
+                    for i in aliased_interfaces:
+                        for n in range(netinfo[i]['nalias']):
+                            if 'alias'+str(n+1)+'_ifaddr' in netinfo[i]:
+                                ip_alias=netinfo[i]['alias'+str(n+1)+'_ifaddr'].split('.')[3].split('/')[0]
+                                if ip_alias=='1':
+                                    mode='SLAVE'
+                                elif ipalias=='254':
+                                    mode='MASTER'
+
 
         out.update( {'LDAP_INFO':output,'LDAP_MODE':mode})
 

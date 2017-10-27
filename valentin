@@ -23,7 +23,6 @@ try:
     #hwd.printCapabilities()
     #print('\nCapabilities stored({}) = {}\n'.format(len(hwd.capabilities_stored),','.join(hwd.capabilities_stored)))
     print("Total running time: {}".format(hwd.RUNNING_TIME))
-
     if ret:
         print "Exit code = 0"
         sys.exit(0)
