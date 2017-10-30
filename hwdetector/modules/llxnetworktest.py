@@ -7,7 +7,7 @@ import subprocess
 log.debug("File "+__name__+" loaded")
 
 class LlxNetworkTest(Detector):
-    _NEEDS=['NETINFO','RESOLVER_INFO','HELPER_CHECK_PING','LLIUREX_RELEASE','HELPER_GET_FILE_FROM_NET']
+    _NEEDS=['NETINFO','RESOLVER_INFO','HELPER_CHECK_PING','LLIUREX_RELEASE']
     _PROVIDES=['LLXNETWORK_TEST']
 
     def make_result(self,*args,**kwargs):
@@ -70,10 +70,10 @@ class LlxNetworkTest(Detector):
             check_internet(msg)
         else:
             try:
-                mode= netinfo['proxy']['mode']
+                mode= netinfo['proxy']['autoconfig']['mode']
                 if mode == 'auto':
                     pac=netinfo['proxy']['autoconfig']
-                    if self.get_file_from_net(pac):
+                    if netinfo['proxy']['autoconfig']['pacfile'] != 'NOT_AVAILABLE':
                         msg,append(self.make_result(result='Proxy autoconfig',msg='Ok! Pac file available'))
                         check_internet(msg,True)
                     else:
