@@ -1,11 +1,7 @@
 #!/usr/bin/env python
 import hwdetector.Detector as Detector
 import utils.log as log
-import subprocess
 import re
-from os import listdir
-from os import environ
-import os
 
 log.debug("File "+__name__+" loaded")
 
@@ -19,17 +15,27 @@ class LlxNetworkResolver(Detector):
 
     def addr_checks(self,*args,**kwargs):
         ns=str(args[0])
-        ip=self.check_ns(ns)
         ret=False
-        if ip:
-            self.output['RESOLVED'].append(ns)
+        only_ip = re.findall('\d+\.\d+\.\d+\.\d+',ns)
+        go_to_ping = True
+
+        if only_ip:
+            ip = ns
+        else:
+            ip=self.check_ns(ns)
+            if ip:
+                self.output['RESOLVED'].append(ns)
+
+            else:
+                self.output['UNRESOLVED'].append(ns)
+                go_to_ping=False
+
+        if go_to_ping:
             if self.check_ping(ip):
                 self.output['REACHABLE'].append(ip)
                 ret=True
             else:
                 self.output['UNREACHABLE'].append(ip)
-        else:
-            self.output['UNRESOLVED'].append(ns)
 
         return ret
 

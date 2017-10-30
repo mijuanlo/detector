@@ -4,7 +4,6 @@ import utils.log as log
 import re
 import urllib2 as urllib
 import os.path
-import sys
 
 log.debug("File "+__name__+" loaded")
 
@@ -58,18 +57,23 @@ class LlxHelpers(Detector):
     def get_file_from_net(self,*args,**kwargs):
         if not args[0]:
             return None
+        if 'proxy' in kwargs and kwargs['proxy'] == True:
+            proxy = urllib.ProxyHandler() #use autodetected proxies
+            opener = urllib.build_opener(proxy)
+            urllib.install_opener(opener)
+
         proto=args[0].split(':')
         if proto[0]:
             proto=proto[0].lower()
         else:
             return None
-        if 'http' != proto or 'https' != proto:
+        if 'http' != proto and 'https' != proto:
             return None
         try:
             content = urllib.urlopen(args[0])
             data = content.read()
             return data
-        except:
+        except Exception as e:
             return None
 
     def file_find_line(self,*args,**kwargs):
