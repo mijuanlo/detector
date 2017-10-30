@@ -127,7 +127,10 @@ class LlxLdap(Detector):
             return p == compare
 
     def get_ldap_config(self,*args,**kwargs):
-        db=subprocess.check_output(['ldapsearch','-Y','EXTERNAL','-H','ldapi:///','-LLL'],stderr=open(os.devnull,'w'), preexec_fn=self.demote)
+        try:
+            db=subprocess.check_output(['ldapsearch','-Y','EXTERNAL','-H','ldapi:///','-LLL'],stderr=open(os.devnull,'w'), preexec_fn=self.demote)
+        except:
+            db=None
         try:
             config=subprocess.check_output(['ldapsearch','-Y','EXTERNAL','-H','ldapi:///','-b','cn=config','-LLL'],stderr=open(os.devnull,'w'), preexec_fn=self.demote)
         except:
