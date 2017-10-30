@@ -20,7 +20,7 @@ class LlxNetworkTest(Detector):
             result=[str(kwargs['result'])]
 
         for x in result:
-            ret+='{} {}\n'.format(x,kwargs['msg'])
+            ret+='{}: {}\n'.format(x,kwargs['msg'])
         return ret
 
     def run(self,*args,**kwargs):
@@ -81,6 +81,7 @@ class LlxNetworkTest(Detector):
                 elif mode != 'none':
                     check_internet(msg,True)
             except Exception as e:
+                msg,append(self.make_result(result='Proxy',msg='not using proxy'))
                 check_internet(msg)
 
         # CHECK NAME RESOLUTION
