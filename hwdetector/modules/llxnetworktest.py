@@ -81,7 +81,7 @@ class LlxNetworkTest(Detector):
                 elif mode != 'none':
                     check_internet(msg,True)
             except Exception as e:
-                msg,append(self.make_result(result='Proxy',msg='not using proxy'))
+                msg.append(self.make_result(result='Proxy',msg='not using proxy'))
                 check_internet(msg)
 
         # CHECK NAME RESOLUTION
