@@ -53,7 +53,8 @@ class PluginManager(object):
                         log.error("Duplicated class {} found into module {}, unable to add".format(name,module.__name__))
                         self.found_duplicates=True
                         continue
-                    self.found.append("{}.{}".format(module.__name__, name))
+                    #self.found.append("{}.{}".format(module.__name__, name))
+                    self.found.append("{}".format(name))
                     self.classes[name] = obj
 
 
