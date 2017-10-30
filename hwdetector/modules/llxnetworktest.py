@@ -74,10 +74,10 @@ class LlxNetworkTest(Detector):
                 if mode == 'auto':
                     pac=netinfo['proxy']['autoconfig']
                     if netinfo['proxy']['autoconfig']['pacfile'] != 'NOT_AVAILABLE':
-                        msg,append(self.make_result(result='Proxy autoconfig',msg='Ok! Pac file available'))
+                        msg.append(self.make_result(result='Proxy autoconfig',msg='Ok! Pac file available'))
                         check_internet(msg,True)
                     else:
-                        msg,append(self.make_result(result='Proxy autoconfig',msg='Nok! file not available'))
+                        msg.append(self.make_result(result='Proxy autoconfig',msg='Nok! file not available'))
                 elif mode != 'none':
                     check_internet(msg,True)
             except Exception as e:
