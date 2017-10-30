@@ -6,6 +6,7 @@ log.debug("File "+__name__+" loaded")
 import dill as pickle
 import time
 import sys
+import traceback
 
 
 class _Detector(object):
@@ -46,6 +47,7 @@ class Detector(_Detector):
                 out.send(ret)
             except Exception as e:
                 log.error('Exception in plugin({}): {}'.format(self.__class__.__name__,e))
+                log.error('Traceback:\n{}'.format(traceback.format_exc()))
                 return None
             return ret
 

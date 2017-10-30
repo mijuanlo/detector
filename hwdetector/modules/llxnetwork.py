@@ -157,7 +157,6 @@ class LlxNetwork(Detector):
                 pass
         output['routes']=rt
         output['gw']=rt['names']['default']
-
         resolv=self.get_resolver()
         output['resolver']=resolv
 
