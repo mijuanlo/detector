@@ -7,7 +7,7 @@ import subprocess
 log.debug("File "+__name__+" loaded")
 
 class LlxNetworkTest(Detector):
-    _NEEDS=['NETINFO','RESOLVER_INFO','HELPER_CHECK_PING','LLIUREX_RELEASE']
+    _NEEDS=['NETINFO','RESOLVER_INFO','HELPER_CHECK_PING','LLIUREX_RELEASE','HELPER_GET_FILE_FROM_NET']
     _PROVIDES=['LLXNETWORK_TEST']
 
     def make_result(self,*args,**kwargs):
@@ -54,8 +54,9 @@ class LlxNetworkTest(Detector):
 
         def check_internet(msg,proxy=False):
             try:
-                if self.check_ping('8.8.8.8'):
-                    msg.append(self.make_result(result='Internet',msg='Ok! conectivity available'))
+                if proxy or self.check_ping('8.8.8.8'):
+                    if not proxy:
+                        msg.append(self.make_result(result='Internet ICMP',msg='Ok! conectivity available'))
                     if self.get_file_from_net('http://lliurex.net',proxy):
                         msg.append(self.make_result(result='Lliurex.net',msg='Ok! conectivity available'))
                     else:
@@ -63,7 +64,7 @@ class LlxNetworkTest(Detector):
                 else:
                     raise Exception()
             except Exception as e:
-                msg.append(self.make_result(result='Internet',msg='Nok! connectivity not available'))
+                msg.append(self.make_result(result='Internet ICMP',msg='Nok! connectivity not available'))
             return msg
 
         if release != 'client':
