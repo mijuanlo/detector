@@ -8,7 +8,7 @@ log.debug("File "+__name__+" loaded")
 
 class LlxSystemTest(Detector):
     #_NEEDS=['LDAP_INFO','LDAP_MODE','LDAP_MASTER_IP','N4D_STATUS','USER_TEST']
-    _NEEDS=['SYSTEMCTL_INFO','APACHE_INFO','EPOPTES_INFO','DNSMASQ_INFO','SQUID_INFO']
+    _NEEDS=['SYSTEMCTL_INFO','DPKG_INFO','APACHE_INFO','EPOPTES_INFO','DNSMASQ_INFO','SQUID_INFO']
     _PROVIDES=['LLXSYSTEM_TEST']
 
     def run(self,*args,**kwargs):
