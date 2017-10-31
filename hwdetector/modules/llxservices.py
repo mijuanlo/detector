@@ -36,13 +36,16 @@ class LlxServices(Detector):
         files=['/etc/apache2/apache2.conf','/etc/apache2/envvars','/etc/apache2/ports.conf']
         dirs=['/etc/apache2/conf-enabled/','/etc/apache2/mods-enabled/','/etc/apache2/sites-enabled/']
         for dir in dirs:
-            for file in os.listdir(dir):
-                files.append(dir+'/'+file)
+            if os.path.exists(dir):
+                for file in os.listdir(dir):
+                    files.append(dir+'/'+file)
         for file in files:
                 with open(file,'r') as f:
                     apacheconf+=f.read()+"\n"
         apacheconf=self.uncomment(apacheconf)
         syntax=subprocess.check_output(['apachectl','-t'],stderr=subprocess.STDOUT).strip()
+        if syntax.lower() == 'syntax ok':
+            syntax = 'OK'
         mod=subprocess.check_output(['apachectl','-M']).split("\n")
         modules={}
         for line in mod:
