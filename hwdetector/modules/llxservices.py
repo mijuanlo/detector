@@ -44,18 +44,21 @@ class LlxServices(Detector):
                 with open(file,'r') as f:
                     apacheconf+=f.read()+"\n"
         apacheconf=self.uncomment(apacheconf)
-        syntax=subprocess.check_output(['apachectl','-t'],stderr=subprocess.STDOUT).strip()
-        if syntax.lower() == 'syntax ok':
-            syntax = 'OK'
-        mod=subprocess.check_output(['apachectl','-M']).split("\n")
-        modules={}
-        for line in mod:
-            m = re.search(r'\s+(?P<module>\S+)\s+\((?P<type>\S+)\)',line)
-            if m:
-                d=m.groupdict()
-                modules.update({d['module']:d['type']})
+        try:
+            syntax=subprocess.check_output(['apachectl','-t'],stderr=subprocess.STDOUT).strip()
+            if syntax.lower() == 'syntax ok':
+                syntax = 'OK'
+            mod=subprocess.check_output(['apachectl','-M']).split("\n")
+            modules={}
+            for line in mod:
+                m = re.search(r'\s+(?P<module>\S+)\s+\((?P<type>\S+)\)',line)
+                if m:
+                    d=m.groupdict()
+                    modules.update({d['module']:d['type']})
 
-        output.update({'APACHE_INFO':{'config':apacheconf,'syntax':syntax,'modules':modules}})
+            output.update({'APACHE_INFO':{'config':apacheconf,'syntax':syntax,'modules':modules}})
+        except:
+            output.update({'APACHE_INFO':None})
         # EPOPTES
         output.update({'EPOPTES_INFO':None})
 
