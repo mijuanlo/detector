@@ -10,11 +10,13 @@ log.debug("File "+__name__+" loaded")
 
 class LlxServices(Detector):
     _PROVIDES = ['SYSTEMCTL_INFO','APACHE_INFO','EPOPTES_INFO','DNSMASQ_INFO','SQUID_INFO']
-    _NEEDS = ['DPKG_INFO','N4D_STATUS','N4D_MODULES','HELPER_UNCOMMENT']
+    _NEEDS = ['DPKG_INFO','N4D_STATUS','N4D_MODULES','HELPER_UNCOMMENT','NETINFO']
 
     def run(self,*args,**kwargs):
         output={}
         dpkg_info=kwargs['DPKG_INFO']
+        netinfo=kwargs['NETINFO']
+
         has_apache=False
         if [ x for x in dpkg_info['BYNAME'].keys() if x.lower().startswith('apache2') ]:
             has_apache=True
@@ -54,16 +56,25 @@ class LlxServices(Detector):
                 syntax=subprocess.check_output(['apachectl','-t'],stderr=subprocess.STDOUT).strip()
                 if syntax.lower() == 'syntax ok':
                     syntax = 'OK'
-                mod=subprocess.check_output(['apachectl','-M']).split("\n")
+                mod=subprocess.check_output(['apachectl','-M','-S']).split("\n")
                 modules={}
-                regexp=re.compile(r'\s+(?P<module>\S+)\s+\((?P<type>\S+)\)')
+                ports_used={}
+                regexp=re.compile(r'^\s+(?P<module>\S+)\s+\((?P<type>static|shared)\)$')
+                regexp2=re.compile(r'^\s+port\s+(?P<PORT>\d+).*$')
                 for line in mod:
                     m = re.search(regexp,line)
                     if m:
                         d=m.groupdict()
                         modules.update({d['module']:d['type']})
+                    m = re.search(regexp2,line)
+                    if m:
+                        ports_used.update(m.groupdict())
 
-                output.update({'APACHE_INFO':{'config':apacheconf,'syntax':syntax,'modules':modules}})
+                port_in_use=False
+                # TODO: CHECK PROCESS NAME FROM PORT
+                if '80' in netinfo['netstat']['BYPORT']:
+                    port_in_use=True
+                output.update({'APACHE_INFO':{'config':apacheconf,'syntax':syntax,'modules':modules,'PORT_USED':port_in_use}})
             except:
                 output.update({'APACHE_INFO':None})
         # EPOPTES

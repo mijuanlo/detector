@@ -145,6 +145,32 @@ class LlxNetwork(Detector):
 
         return output
 
+    def get_listens(self,*args,**kwargs):
+        netstat_listen=subprocess.check_output(['netstat','-4tuln']).split("\n")
+        # TODO:CHECK PROCESS USING PORT AND STORE IT
+        regexp=re.compile(r'(?P<PROTO>\w+)\s+\d+\s+\d+\s+(?P<LISTEN_ON>[^:\s]+):(?P<PORT>\d+)\s+.*$')
+        netstat_info={'BYPROTO':{},'BYPORT':{}}
+        for line in netstat_listen:
+            listen_info = re.search(regexp,line)
+            if listen_info:
+                d=listen_info.groupdict()
+                proto=d['PROTO']
+                port=d['PORT']
+                if proto not in netstat_info['BYPROTO']:
+                    netstat_info['BYPROTO'][proto]={}
+                if port in netstat_info['BYPROTO'][proto]:
+                    netstat_info['BYPROTO'][proto][port].append(d['LISTEN_ON'])
+                else:
+                    netstat_info['BYPROTO'][proto][port]=[d['LISTEN_ON']]
+
+                if port not in netstat_info['BYPORT']:
+                    netstat_info['BYPORT'][port]={}
+                if proto in netstat_info['BYPORT'][port]:
+                    netstat_info['BYPORT'][port][proto].append(d['LISTEN_ON'])
+                else:
+                    netstat_info['BYPORT'][port][proto]=[d['LISTEN_ON']]
+        return netstat_info
+
     def run(self,*args,**kwargs):
         rt=self.get_routes()
         output=self.get_ifaces()
@@ -163,6 +189,7 @@ class LlxNetwork(Detector):
         proxy=self.get_proxy()
         output['proxy']=proxy
 
+        output['netstat']=self.get_listens()
         #s=json.dumps(output)
 
         return {'NETINFO':output}
