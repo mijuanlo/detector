@@ -40,6 +40,7 @@ class LlxServices(Detector):
                 for file in os.listdir(dir):
                     files.append(dir+'/'+file)
         for file in files:
+            if os.path.exists(file):
                 with open(file,'r') as f:
                     apacheconf+=f.read()+"\n"
         apacheconf=self.uncomment(apacheconf)
