@@ -36,22 +36,30 @@ class LlxHelpers(Detector):
         except:
             is_file = False
         if is_file:
-            reg=re.compile('^\s*([^#].+$)')
+            #reg=re.compile('^\s*([^#].+$)')
+            reg=re.compile(r'^(\s*|#.*)*$')
             with open(args[0],'r') as f:
                 for line in f.readlines():
                     m=re.match(reg,line)
-                    if m:
-                        r = r + m.group(1) + "\n"
+                    if not m:
+                        r += line + "\n"
+                    #m=re.match(reg,line)
+                    #if m:
+                    #    r = r + m.group(1) + "\n"
         else:
             if type(args[0]) == type(list()):
                 string = ''.join(str(args[0]))
             else:
                 string=str(args[0])
-            reg = re.compile('^\s*([^#].+$)')
+            #reg = re.compile('^\s*([^#].+$)')
+            reg=re.compile(r'^(\s*|#.*)*$')
             for line in string.split("\n"):
-                m = re.match(reg, line)
-                if m:
-                    r = r + m.group(1) + "\n"
+                m=re.match(reg,line)
+                if not m:
+                    r += line + "\n"
+                #m = re.match(reg, line)
+                #if m:
+                #    r = r + m.group(1) + "\n"
         return r.strip()
 
     def get_file_from_net(self,*args,**kwargs):
