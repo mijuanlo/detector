@@ -54,9 +54,9 @@ class LlxServices(Detector):
             apacheconf=self.uncomment(apacheconf)
             try:
                 syntax=subprocess.check_output(['apachectl','-t'],stderr=subprocess.STDOUT).strip()
-                if syntax.lower() == 'syntax ok':
+                if 'syntax ok' in syntax.lower():
                     syntax = 'OK'
-                mod=subprocess.check_output(['apachectl','-M','-S']).split("\n")
+                mod=subprocess.check_output(['apachectl','-M','-S'],stderr=open(os.devnull,'w')).split("\n")
                 modules={}
                 ports_used={}
                 regexp=re.compile(r'^\s+(?P<module>\S+)\s+\((?P<type>static|shared)\)$')
