@@ -45,7 +45,7 @@ class LlxNetworkResolver(Detector):
             release=release.lower()
         session=kwargs["LLIUREX_SESSION_TYPE"]
         if session:
-            session = session..lower()
+            session = session.lower()
         ldap_mode=kwargs["LDAP_MODE"]
         if ldap_mode:
             ldap_mode=ldap_mode.lower()
