@@ -35,7 +35,8 @@ class LlxSystemTest(Detector):
 
         if 'server' in release.lower():
             needed_services=['apache2','epoptes','dnsmasq','slapd',]
-            needed_services.extend(needed_services_common)
+
+        needed_services.extend(needed_services_common)
 
         res_ok=[]
         res_nok=[]
