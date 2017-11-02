@@ -30,6 +30,7 @@ class LlxSystemTest(Detector):
         msg=[]
 
         systemctl=kwargs['SYSTEMCTL_INFO']
+        needed_services=[]
         needed_services_common=['n4d']
 
         if 'server' in release.lower():
