@@ -6,8 +6,8 @@ import utils.log as log
 try:
     log.level = logging.DEBUG
     log.level = logging.INFO
-    #log.level = logging.WARNING
-    log.level = logging.ERROR
+    log.level = logging.WARNING
+    #log.level = logging.ERROR
     log.debug("Importing hwdetector")
     import hwdetector
 

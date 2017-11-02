@@ -378,6 +378,8 @@ class HwDetector:
                                     setattr(obj,f['code'].__code__.co_name,f['code'])
                                     log.debug('Helper {} registered into {}'.format(need,obj.__class__.__name__))
                                 else:
+                                    if not self.capabilities[need]:
+                                        log.warning('Providing capability {} with an empty value to {} plugin'.format(need,obj.__class__.__name__))
                                     kw.update({need:self.capabilities[need]})
                                     args = args + (self.capabilities[need],)
 
@@ -435,7 +437,7 @@ class HwDetector:
                                                                                                                 out_stripped,
                                                                                                                 pinfo['rtime']))
                                     if not out_stripped:
-                                        log.warning("Capability {} has empty value {}".format(provide,str(out_stripped)))
+                                        log.warning("Capability {} was stored with and empty value of {}".format(provide,str(out_stripped)))
                                     self.capabilities[provide] = out_stripped
                                     self.capabilities_stored.append(provide)
                                 else: # provide not in output
