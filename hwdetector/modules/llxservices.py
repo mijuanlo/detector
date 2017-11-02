@@ -78,7 +78,32 @@ class LlxServices(Detector):
             except:
                 output.update({'APACHE_INFO':None})
         # EPOPTES
-        output.update({'EPOPTES_INFO':None})
+        epoptes_info=None
+        has_epoptes=False
+        if [ x for x in dpkg_info['BYNAME'].keys() if x.lower().startswith('epoptes') ]:
+            has_epoptes=True
+        if has_epoptes:
+            epoptes_info={}
+            has_epoptes_server=False
+            if [ x for x in dpkg_info['BYNAME'].keys() if x.lower().startswith('n4d-epoptes-server') ]:
+                has_epoptes_server=True
+            has_epoptes_client=False
+            if [ x for x in dpkg_info['BYNAME'].keys() if x.lower().startswith('n4d-epoptes-client') ]:
+                has_epoptes_client=True
+
+            if has_epoptes_server:
+                port_in_use=False
+                if '2872' in netinfo['netstat']['BYPORT']:
+                    port_in_use=True
+                logfile = None
+                if os.path.exists('/var/log/epoptes.log'):
+                    with open('/var/log/epoptes.log','r') as f:
+                        logfile = f.read().strip()
+
+                epoptes_info={'logfile':logfile,'PORT_USED':port_in_use}
+
+        output.update({'EPOPTES_INFO':epoptes_info})
+
 
         # DNSMASQ
         output.update({'DNSMASQ_INFO':None})

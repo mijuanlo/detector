@@ -7,7 +7,7 @@ import subprocess
 log.debug("File "+__name__+" loaded")
 
 class LlxNetworkTest(Detector):
-    _NEEDS=['NETINFO','RESOLVER_INFO','HELPER_CHECK_PING','LLIUREX_RELEASE','HELPER_GET_FILE_FROM_NET']
+    _NEEDS=['NETINFO','RESOLVER_INFO','HELPER_CHECK_PING','LLIUREX_RELEASE','HELPER_GET_FILE_FROM_NET','TEST']
     _PROVIDES=['LLXNETWORK_TEST']
 
     def make_result(self,*args,**kwargs):
@@ -20,10 +20,15 @@ class LlxNetworkTest(Detector):
             result=[str(kwargs['result'])]
 
         for x in result:
-            ret+='{}: {}\n'.format(x,kwargs['msg'])
+            ret+='{}> {}: {}\n'.format(self.__class__.__name__,x,kwargs['msg'])
         return ret
 
     def run(self,*args,**kwargs):
+
+        tes=kwargs['TEST']
+        tes.to_string()
+        pass
+
         msg=[]
         status=True
 
