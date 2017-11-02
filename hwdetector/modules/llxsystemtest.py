@@ -44,8 +44,9 @@ class LlxSystemTest(Detector):
         for need in needed_services:
             if need in systemctl['BYUNIT'] and systemctl['BYUNIT'][need][0]['SUB'] == 'running':
                 res_ok.append('Service {}'.format(need))
-                for x in ps.search(needed_services[need]):
-                    res_ok.append('Process matching {}'.format(x))
+                plist=ps.search(needed_services[need])
+                for x in plist:
+                    res_ok.append('{} Process matching \'{}\''.format(len(plist[x]),x))
             else:
                 res_nok.append('Service {}'.format(need))
                 status=False

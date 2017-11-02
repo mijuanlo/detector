@@ -104,7 +104,6 @@ class LlxServices(Detector):
 
         output.update({'EPOPTES_INFO':epoptes_info})
 
-
         # DNSMASQ
         output.update({'DNSMASQ_INFO':None})
 
