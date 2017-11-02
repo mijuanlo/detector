@@ -40,9 +40,15 @@ class LlxNetworkResolver(Detector):
         return ret
 
     def run(self,*args,**kwargs):
-        release=kwargs['LLIUREX_RELEASE'].lower()
-        session=kwargs["LLIUREX_SESSION_TYPE"].lower()
-        ldap_mode=kwargs["LDAP_MODE"].lower()
+        release=kwargs['LLIUREX_RELEASE']
+        if release:
+            release=release.lower()
+        session=kwargs["LLIUREX_SESSION_TYPE"]
+        if session:
+            session = session..lower()
+        ldap_mode=kwargs["LDAP_MODE"]
+        if ldap_mode:
+            ldap_mode=ldap_mode.lower()
         ldap_master_ip=kwargs['LDAP_MASTER_IP']
         n4d_vars=kwargs['N4D_VARS']
 

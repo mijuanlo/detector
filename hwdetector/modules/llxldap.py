@@ -184,7 +184,7 @@ class LlxLdap(Detector):
                                 ip_alias=netinfo[i]['alias'+str(n+1)+'_ifaddr'].split('.')[3].split('/')[0]
                                 if ip_alias=='1':
                                     mode='SLAVE'
-                                elif ipalias=='254':
+                                elif ip_alias=='254':
                                     mode='MASTER'
 
         out.update( {'LDAP_INFO':output,'LDAP_MODE':mode})
