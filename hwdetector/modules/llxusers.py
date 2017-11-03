@@ -60,75 +60,77 @@ class LlxUsers(Detector):
                     perm_dirs[file][field[0]]=field[1]
                 else:
                     perm_dirs[file][field[0]][field[1]]=field[2]
+        if users:
+            for (u,udata) in users:
+                #TEST HOME
+                if os.path.exists(udata['homeDirectory'][0]):
+                    output[u] = {'HAS_HOME': True}
 
-        for (u,udata) in users:
-            #TEST HOME
-            if os.path.exists(udata['homeDirectory'][0]):
-                output[u] = {'HAS_HOME': True}
+                    homedir=udata['homeDirectory'][0]
+                    user=udata['uid'][0]
 
-                homedir=udata['homeDirectory'][0]
-                user=udata['uid'][0]
-
-                try:
-                    output[u]['PERM_OK']=\
-                        perm_dirs[homedir]['USER'][user] == 'rwx' \
-                        and perm_dirs[homedir]['user'][user] == 'rwx' \
-                        and perm_dirs[homedir]['GROUP']['nogroup'] == 'r-x' \
-                        and perm_dirs[homedir]['group']['students'] == '---' \
-                        and perm_dirs[homedir]['group']['teachers'] == 'rwx' \
-                        and perm_dirs[homedir]['group']['admins'] == 'rwx' \
-                        and perm_dirs[homedir]['other'] == '---'
-                except:
-                    output[u]['PERM_OK']=False
-            else:
-                output[u]={'HAS_HOME': False}
+                    try:
+                        output[u]['PERM_OK']=\
+                            perm_dirs[homedir]['USER'][user] == 'rwx' \
+                            and perm_dirs[homedir]['user'][user] == 'rwx' \
+                            and perm_dirs[homedir]['GROUP']['nogroup'] == 'r-x' \
+                            and perm_dirs[homedir]['group']['students'] == '---' \
+                            and perm_dirs[homedir]['group']['teachers'] == 'rwx' \
+                            and perm_dirs[homedir]['group']['admins'] == 'rwx' \
+                            and perm_dirs[homedir]['other'] == '---'
+                    except:
+                        output[u]['PERM_OK']=False
+                else:
+                    output[u]={'HAS_HOME': False}
 
         # TEACHERS
-        for (u,udata) in teachers:
-            #TEST HOME
-            if os.path.exists(udata['homeDirectory'][0]):
-                output[u] = {'HAS_HOME': True}
+        if teachers:
+            for (u,udata) in teachers:
+                #TEST HOME
+                if os.path.exists(udata['homeDirectory'][0]):
+                    output[u] = {'HAS_HOME': True}
 
-                homedir=udata['homeDirectory'][0]
-                user=udata['uid'][0]
+                    homedir=udata['homeDirectory'][0]
+                    user=udata['uid'][0]
 
-                try:
-                    output[u]['PERM_OK']=\
-                        perm_dirs[homedir]['USER'][user] == 'rwx' \
-                        and perm_dirs[homedir]['user'][user] == 'rwx' \
-                        and perm_dirs[homedir]['GROUP']['nogroup'] == 'r-x' \
-                        and perm_dirs[homedir]['group']['students'] == '---' \
-                        and perm_dirs[homedir]['group']['teachers'] == 'rwx' \
-                        and perm_dirs[homedir]['group']['admins'] == 'rwx' \
-                        and perm_dirs[homedir]['other'] == '---'
-                except:
-                    output[u]['PERM_OK']=False
+                    try:
+                        output[u]['PERM_OK']=\
+                            perm_dirs[homedir]['USER'][user] == 'rwx' \
+                            and perm_dirs[homedir]['user'][user] == 'rwx' \
+                            and perm_dirs[homedir]['GROUP']['nogroup'] == 'r-x' \
+                            and perm_dirs[homedir]['group']['students'] == '---' \
+                            and perm_dirs[homedir]['group']['teachers'] == 'rwx' \
+                            and perm_dirs[homedir]['group']['admins'] == 'rwx' \
+                            and perm_dirs[homedir]['other'] == '---'
+                    except:
+                        output[u]['PERM_OK']=False
 
-            else:
-                output[u]={'HAS_HOME': False}
+                else:
+                    output[u]={'HAS_HOME': False}
 
         # ADMINS
-        for (u,udata) in admins:
-            #TEST HOME
-            if os.path.exists(udata['homeDirectory'][0]):
-                output[u] = {'HAS_HOME': True}
+        if admins:
+            for (u,udata) in admins:
+                #TEST HOME
+                if os.path.exists(udata['homeDirectory'][0]):
+                    output[u] = {'HAS_HOME': True}
 
-                homedir=udata['homeDirectory'][0]
-                user=udata['uid'][0]
+                    homedir=udata['homeDirectory'][0]
+                    user=udata['uid'][0]
 
-                try:
-                    output[u]['PERM_OK']=\
-                        perm_dirs[homedir]['USER'][user] == 'rwx' \
-                        and perm_dirs[homedir]['user'][user] == 'rwx' \
-                        and perm_dirs[homedir]['GROUP']['nogroup'] == 'r-x' \
-                        and perm_dirs[homedir]['group']['students'] == '---' \
-                        and perm_dirs[homedir]['group']['teachers'] == 'rwx' \
-                        and perm_dirs[homedir]['group']['admins'] == 'rwx' \
-                        and perm_dirs[homedir]['other'] == '---'
-                except:
-                    output[u]['PERM_OK']=False
+                    try:
+                        output[u]['PERM_OK']=\
+                            perm_dirs[homedir]['USER'][user] == 'rwx' \
+                            and perm_dirs[homedir]['user'][user] == 'rwx' \
+                            and perm_dirs[homedir]['GROUP']['nogroup'] == 'r-x' \
+                            and perm_dirs[homedir]['group']['students'] == '---' \
+                            and perm_dirs[homedir]['group']['teachers'] == 'rwx' \
+                            and perm_dirs[homedir]['group']['admins'] == 'rwx' \
+                            and perm_dirs[homedir]['other'] == '---'
+                    except:
+                        output[u]['PERM_OK']=False
 
-            else:
-                output[u]={'HAS_HOME': False}
+                else:
+                    output[u]={'HAS_HOME': False}
 
         return {'USERS_INFO':None,'USER_TEST':output}
