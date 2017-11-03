@@ -152,9 +152,9 @@ class LlxHelpers(Detector):
 
     def who_i_am(self,*args,**kwargs):
         euid=os.geteuid()
-        user_name=pwd.getpwuid(euid)[0]
+        user_info=pwd.getpwuid(euid)
         groups = [group[0] for group in grp.getgrall() if user_name in group[3]]
-        return {'id':euid,'name':user_name,'groups':groups}
+        return {'id':euid,'user_info':user_info,'name':user_info[0],'groups':groups}
 
     def run(self,*args,**kwargs):
         return {

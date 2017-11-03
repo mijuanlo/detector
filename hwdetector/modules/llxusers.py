@@ -28,9 +28,9 @@ class LlxUsers(Detector):
             teachers=[]
             if kwargs['LOGIN_TYPE'].lower() == 'ldap':
                 if 'students' in myinfo['groups']:
-                    users.append(myinfo['name'])
+                    users.append((myinfo['name'],{'homeDirectory':myinfo['user_info'][5],'uid':myinfo['id']}))
                 elif 'teachers' in myinfo['groups']:
-                    teachers.append(myinfo['name'])
+                    teachers.append((myinfo['name'],{'homeDirectory':myinfo['user_info'][5],'uid':myinfo['id']}))
 
 
         # USER TEST FUNCTIONALITY
