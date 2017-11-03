@@ -7,7 +7,7 @@ import subprocess
 log.debug("File "+__name__+" loaded")
 
 class LlxSystemTest(Detector):
-    _NEEDS=['LLIUREX_RELEASE','SYSTEMCTL_INFO','DPKG_INFO','APACHE_INFO','EPOPTES_INFO','DNSMASQ_INFO','SQUID_INFO','PROCESS_INFO']
+    _NEEDS=['LLIUREX_RELEASE','SYSTEMCTL_INFO','DPKG_INFO','APACHE_INFO','EPOPTES_INFO','DNSMASQ_INFO','SQUID_INFO','PROCESS_INFO','VARLOG_INFO']
     _PROVIDES=['LLXSYSTEM_TEST']
 
     def make_result(self,*args,**kwargs):
