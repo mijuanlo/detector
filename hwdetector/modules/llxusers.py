@@ -15,7 +15,6 @@ class LlxUsers(Detector):
         LDAP_INFO=kwargs['LDAP_INFO']
         MOUNTS_INFO=kwargs['MOUNTS_INFO']
         try:
-            raise Exception('s')
             people=LDAP_INFO['CONFIG']['DB']['net']['lliurex']['ma5']['People']
             users=[(x,people['Students'][x]) for x in people['Students'].keys() if type(people['Students'][x]) == type(dict())]
             admins=[(x,people['Admins'][x]) for x in people['Admins'].keys() if type(people['Admins'][x]) == type(dict())]

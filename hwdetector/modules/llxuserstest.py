@@ -11,6 +11,10 @@ class LlxUsersTest(Detector):
     def run(self,*args,**kwargs):
         status=True
         msg=[]
+        mounts_info=kwargs['MOUNTS_INFO']
+        user_test=kwargs['USER_TEST']
+
+        msg=['{}\n'.format(user_test)]
 
         msg=''.join(msg)
         return {'LLXUSERS_TEST':{'status':status,'msg':msg}}
