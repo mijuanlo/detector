@@ -23,14 +23,15 @@ class LlxUsers(Detector):
         except Exception as e:
             people = None # NO LDAP ACCESS DO IT ONLY FOR ME
             myinfo=self.who_i_am()
+            fake_ldap_info=(myinfo['name'],{'homeDirectory':[myinfo['user_info'][5]],'uid':[myinfo['id']]})
             users=[]
             admins=[]
             teachers=[]
             if kwargs['LOGIN_TYPE'].lower() == 'ldap':
                 if 'students' in myinfo['groups']:
-                    users.append((myinfo['name'],{'homeDirectory':myinfo['user_info'][5],'uid':myinfo['id']}))
+                    users.append(fake_ldap_info)
                 elif 'teachers' in myinfo['groups']:
-                    teachers.append((myinfo['name'],{'homeDirectory':myinfo['user_info'][5],'uid':myinfo['id']}))
+                    teachers.append(fake_ldap_info)
 
 
         # USER TEST FUNCTIONALITY
