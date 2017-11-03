@@ -9,6 +9,8 @@ class LlxUsersTest(Detector):
     _PROVIDES=['LLXUSERS_TEST']
 
     def run(self,*args,**kwargs):
-        output={}
+        status=True
+        msg=[]
 
-        return {'LLXUSERS_TEST':output}
+        msg=''.join(msg)
+        return {'LLXUSERS_TEST':{'status':status,'msg':msg}}
