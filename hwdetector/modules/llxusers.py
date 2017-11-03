@@ -7,18 +7,31 @@ import subprocess
 log.debug("File "+__name__+" loaded")
 
 class LlxUsers(Detector):
-    _NEEDS = ['LDAP_INFO','MOUNTS_INFO','LLIUREX_SESSION_TYPE','LLIUREX_RELEASE']
-    _PROVIDES = ['USER_TEST']
+    _NEEDS = ['LDAP_INFO','MOUNTS_INFO','LLIUREX_SESSION_TYPE','LLIUREX_RELEASE','HELPER_WHO_I_AM','LOGIN_TYPE']
+    _PROVIDES = ['USERS_INFO','USER_TEST']
 
     def run(self,*args,**kwargs):
         output={}
         LDAP_INFO=kwargs['LDAP_INFO']
         MOUNTS_INFO=kwargs['MOUNTS_INFO']
-        people=LDAP_INFO['CONFIG']['DB']['net']['lliurex']['ma5']['People']
+        try:
+            raise Exception('s')
+            people=LDAP_INFO['CONFIG']['DB']['net']['lliurex']['ma5']['People']
+            users=[(x,people['Students'][x]) for x in people['Students'].keys() if type(people['Students'][x]) == type(dict())]
+            admins=[(x,people['Admins'][x]) for x in people['Admins'].keys() if type(people['Admins'][x]) == type(dict())]
+            teachers=[(x,people['Teachers'][x]) for x in people['Teachers'].keys() if type(people['Teachers'][x]) == type(dict())]
+        except Exception as e:
+            people = None # NO LDAP ACCESS DO IT ONLY FOR ME
+            myinfo=self.who_i_am()
+            users=[]
+            admins=[]
+            teachers=[]
+            if kwargs['LOGIN_TYPE'].lower() == 'ldap':
+                if 'students' in myinfo['groups']:
+                    users.append(myinfo['name'])
+                elif 'teachers' in myinfo['groups']:
+                    teachers.append(myinfo['name'])
 
-        users=[(x,people['Students'][x]) for x in people['Students'].keys() if type(people['Students'][x]) == type(dict())]
-        admins=[(x,people['Admins'][x]) for x in people['Admins'].keys() if type(people['Admins'][x]) == type(dict())]
-        teachers=[(x,people['Teachers'][x]) for x in people['Teachers'].keys() if type(people['Teachers'][x]) == type(dict())]
 
         # USER TEST FUNCTIONALITY
 
@@ -118,4 +131,4 @@ class LlxUsers(Detector):
             else:
                 output[u]={'HAS_HOME': False}
 
-        return {'USER_TEST':output}
+        return {'USERS_INFO':None,'USER_TEST':output}

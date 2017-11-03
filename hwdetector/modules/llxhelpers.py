@@ -4,11 +4,12 @@ import utils.log as log
 import re
 import urllib2 as urllib
 import os.path
+import grp,pwd
 
 log.debug("File "+__name__+" loaded")
 
 class LlxHelpers(Detector):
-    _PROVIDES = ['HELPER_UNCOMMENT',"HELPER_GET_FILE_FROM_NET",'HELPER_FILE_FIND_LINE','HELPER_DEMOTE','HELPER_CHECK_ROOT']
+    _PROVIDES = ['HELPER_UNCOMMENT',"HELPER_GET_FILE_FROM_NET",'HELPER_FILE_FIND_LINE','HELPER_DEMOTE','HELPER_CHECK_ROOT','HELPER_WHO_I_AM']
     _NEEDS = []
 
     # def _close_stderr(self):
@@ -149,11 +150,18 @@ class LlxHelpers(Detector):
         else:
             return False
 
+    def who_i_am(self,*args,**kwargs):
+        euid=os.geteuid()
+        user_name=pwd.getpwuid(euid)[0]
+        groups = [group[0] for group in grp.getgrall() if user_name in group[3]]
+        return {'id':euid,'name':user_name,'groups':groups}
+
     def run(self,*args,**kwargs):
         return {
             'HELPER_UNCOMMENT':{'code':self.uncomment,'glob':globals()},
             'HELPER_GET_FILE_FROM_NET': {'code': self.get_file_from_net, 'glob': globals()},
             'HELPER_FILE_FIND_LINE':{'code': self.file_find_line, 'glob': globals()},
             'HELPER_DEMOTE':{'code':self.demote,'glob':globals()},
-            'HELPER_CHECK_ROOT':{'code':self.check_root,'glob':globals()}
+            'HELPER_CHECK_ROOT':{'code':self.check_root,'glob':globals()},
+            'HELPER_WHO_I_AM':{'code':self.who_i_am,'glob':globals()}
                 }
