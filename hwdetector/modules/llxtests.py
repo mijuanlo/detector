@@ -7,7 +7,7 @@ import subprocess
 log.debug("File "+__name__+" loaded")
 
 class LlxAlltests(Detector):
-    _NEEDS=['LLXSYSTEM_TEST','LLXNETWORK_TEST']
+    _NEEDS=['LLXSYSTEM_TEST','LLXNETWORK_TEST','LLXUSERS_TEST']
     _PROVIDES=['ALL_TESTS']
 
     def run(self,*args,**kwargs):

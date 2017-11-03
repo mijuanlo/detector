@@ -40,9 +40,21 @@ class LlxMounts(Detector):
 
         return output
 
+    def complete_binding_mapping(self,*args,**kwargs):
+        list = args[0]
+        list_bindings = [ (x,list.index(x)) for x in list if 'binding' in x ]
+        list_sources = []
+        for b,idx in list_bindings:
+            list_sources = [ (x,list.index(x)) for x in list if 'device' in x and x['device'] == b['binding']]
+            k=0
+            for s,idx2 in list_sources:
+                k+=1
+                list[idx]['binding_source_link'+str(k)]=s
+        return list
+
     def get_mounts(self,*args,**kwargs):
         findmnt = json.loads(subprocess.check_output(['findmnt','-J'],stderr=open(os.devnull,'w')))
-        mounts = self.parse_findmnt(findmnt['filesystems'])
+        mounts = self.complete_binding_mapping(self.parse_findmnt(findmnt['filesystems']))
         output = {'PSEUDO':[],'DISK':[],'NETWORK':[],'BIND':[],'OTHER':[]}
         #mounts =[]
         #with open('/proc/mounts', 'r') as f:
@@ -55,7 +67,7 @@ class LlxMounts(Detector):
         #            mounts.append(d)
 
         mapping = {'PSEUDO': {'type':['sysfs','proc','devtmpfs','devpts','tmpfs','securityfs','cgroup','pstore','autofs','mqueue','debugfs','hugetlbfs','rpc_pipefs','fusectl','binfmt_misc','nfsd','gvfsd-fuse']},
-                   'NETWORK':{'type':['nfs']},
+                   'NETWORK':{'type':['nfs','cifs']},
                    'DISK':{'device':['/dev/']},
                    'BIND':{'binding':['/']} # 'B'ind is tested first, before 'D'isc
                    }
