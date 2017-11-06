@@ -22,7 +22,7 @@ class LlxUsers(Detector):
         except Exception as e:
             people = None # NO LDAP ACCESS DO IT ONLY FOR ME
             myinfo=self.who_i_am()
-            fake_ldap_info=(myinfo['name'],{'homeDirectory':[myinfo['user_info'][5]],'uid':[myinfo['id']]})
+            fake_ldap_info=(myinfo['name'],{'homeDirectory':[myinfo['user_info'][5]],'uid':[myinfo['name']]})
             users=[]
             admins=[]
             teachers=[]
@@ -133,4 +133,4 @@ class LlxUsers(Detector):
                 else:
                     output[u]={'HAS_HOME': False}
 
-        return {'USERS_INFO':None,'USER_TEST':output}
+        return {'USERS_INFO':perm_dirs,'USER_TEST':output}
