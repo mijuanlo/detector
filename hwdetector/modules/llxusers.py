@@ -10,11 +10,54 @@ class LlxUsers(Detector):
     _NEEDS = ['LDAP_INFO','MOUNTS_INFO','LLIUREX_SESSION_TYPE','LLIUREX_RELEASE','HELPER_WHO_I_AM','LOGIN_TYPE']
     _PROVIDES = ['USERS_INFO','USER_TEST']
 
+
+    def check_mounts(self,username,typeuser,*args,**kwargs):
+        mounts_info=kwargs['MOUNTS_INFO']
+        session_type = kwargs['LLIUREX_SESSION_TYPE']
+        ret = None
+        msg = []
+
+        if typeuser == 'student':
+            if session_type == 'FAT' or session_type == 'SEMI':
+                for share in ['home','share','groups_share']:
+                    mountpoint='/run/' + username + '/' + share
+                    mountsource='//server/'+share
+                    for x in mounts_info['NETWORK']:
+                        ret = False
+                        if x['mount_point'] ==  mountpoint and x['mount_source'] == mountsource and x['fstype'] == 'cifs':
+                            ret = True
+                            msg.append('Samba share {} mounted under {}'.format(mountsource,mountpoint))
+                            break
+                    if not ret:
+                        msg.append('Samba share {} not mounted under {}'.format(mountsource,mountpoint))
+                        break
+                    else:
+                        ret = True
+                if ret:
+                    bind_paths={'Desktop':'/run/'+username+'/home/students/'+username+'/Desktop','Documents':'/run/'+username+'/home/students/'+username+'/Documents','share':'/run/'+username+'/share','groups_share':'/run/'+username+'/groups_share'}
+                    for bind in bind_paths:
+                        for x in mounts_info['BIND']:
+                            ret = False
+                            if x['mount_point'].startswith('/home/' + username) and x['mount_source'] == bind_paths[bind]:
+                                ret = True
+                                msg.append('Bindmount {} from {} available'.format(x['mount_point'],bind_paths[bind]))
+                                break
+                        if not ret:
+                            msg.append('Bindmount {} from {} not available'.format(bind,bind_paths[bind]))
+                            break
+
+            elif session_type == 'THIN':
+                pass
+        elif typeuser == 'teacher':
+            pass
+        elif typeuser == 'admin':
+            pass
+        return (ret,msg)
+
     def run(self,*args,**kwargs):
         output={}
         LDAP_INFO=kwargs['LDAP_INFO']
-        MOUNTS_INFO=kwargs['MOUNTS_INFO']
-        session_type=kwargs['LLIUREX_SESSION_TYPE']
+
         try:
             people=LDAP_INFO['CONFIG']['DB']['net']['lliurex']['ma5']['People']
             users=[(x,people['Students'][x]) for x in people['Students'].keys() if type(people['Students'][x]) == type(dict())]
@@ -82,11 +125,7 @@ class LlxUsers(Detector):
                     except:
                         output[u]['PERM_OK']=False
 
-                    if session_type == 'FAT' or session_type == 'SEMI':
-                        pass
-                    elif session_type == 'THIN':
-                        pass
-
+                    output[u]['MOUNTS_OK']=self.check_mounts(u,'student',**kwargs)
                 else:
                     output[u]={'HAS_HOME': False}
 
