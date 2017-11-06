@@ -14,6 +14,7 @@ class LlxUsers(Detector):
         output={}
         LDAP_INFO=kwargs['LDAP_INFO']
         MOUNTS_INFO=kwargs['MOUNTS_INFO']
+        session_type=kwargs['LLIUREX_SESSION_TYPE']
         try:
             people=LDAP_INFO['CONFIG']['DB']['net']['lliurex']['ma5']['People']
             users=[(x,people['Students'][x]) for x in people['Students'].keys() if type(people['Students'][x]) == type(dict())]
@@ -80,6 +81,12 @@ class LlxUsers(Detector):
                             and perm_dirs[homedir]['other'] == '---'
                     except:
                         output[u]['PERM_OK']=False
+
+                    if session_type == 'FAT' or session_type == 'SEMI':
+                        pass
+                    elif session_type == 'THIN':
+                        pass
+
                 else:
                     output[u]={'HAS_HOME': False}
 
