@@ -159,10 +159,15 @@ class LlxHelpers(Detector):
         return {'id':euid,'user_info':user_info,'name':user_name,'groups':groups}
 
     def users_logged(self,*args,**kwargs):
-        l={}
-        for u in self.execute(run='users').split(' '):
-            l.setdefault(u,True)
-        return l.keys()
+        l=[]
+        regexp=re.compile(r'^(?P<username>\S+)\s+(?P<terminal>\S+)\s+\S+\s+\S+\s+(?P<display>\S+)?$')
+        for line in self.execute(run='who').split('\n'):
+            m = re.match(regexp,line)
+            if m:
+                d=m.groupdict()
+                if d['display'] != None and d['username'] not in l:
+                    l.append(d['username'])
+        return l
 
     def execute(self,timeout=3.0,shell=False,*args,**kwargs):
         params={}
@@ -207,10 +212,14 @@ class LlxHelpers(Detector):
         except Exception as e:
             log.error('Error executing: {}'.format(e))
             return None
-        if with_uncomment:
-            return self.uncomment(stdout.strip())
+        if stdout != None:
+            if with_uncomment:
+                return self.uncomment(stdout.strip())
+            else:
+                return stdout.strip()
         else:
-            return stdout.strip()
+            log.warning("Execution of {} hasn't produced any result, returning None")
+            return None
 
     def run(self,*args,**kwargs):
         return {
