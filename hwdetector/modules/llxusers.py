@@ -13,27 +13,50 @@ class LlxUsers(Detector):
     def check_mounts(self,username,typeuser,*args,**kwargs):
         mounts_info=kwargs['MOUNTS_INFO']
         session_type = kwargs['LLIUREX_SESSION_TYPE']
+        release = kwargs['LLIUREX_RELEASE'].lower()
         ret = None
         msg = []
 
-        if typeuser == 'student':
-            if session_type == 'FAT' or session_type == 'SEMI':
-                for share in ['home','share','groups_share']:
-                    mountpoint='/run/' + username + '/' + share
-                    mountsource='//server/'+share
-                    for x in mounts_info['NETWORK']:
-                        ret = False
-                        if x['mount_point'] ==  mountpoint and x['mount_source'] == mountsource and x['fstype'] == 'cifs':
-                            ret = True
-                            msg.append('Samba share {} mounted under {}'.format(mountsource,mountpoint))
+        if release == 'client':
+            if typeuser == 'student':
+                if session_type == 'FAT' or session_type == 'SEMI':
+                    for share in ['home','share','groups_share']:
+                        mountpoint='/run/' + username + '/' + share
+                        mountsource='//server/'+share
+                        for x in mounts_info['NETWORK']:
+                            ret = False
+                            if x['mount_point'] ==  mountpoint and x['mount_source'] == mountsource and x['fstype'] == 'cifs':
+                                ret = True
+                                msg.append('Samba share {} mounted under {}'.format(mountsource,mountpoint))
+                                break
+                        if not ret:
+                            msg.append('Samba share {} not mounted under {}'.format(mountsource,mountpoint))
                             break
-                    if not ret:
-                        msg.append('Samba share {} not mounted under {}'.format(mountsource,mountpoint))
-                        break
-                    else:
-                        ret = True
-                if ret:
-                    bind_paths={'Desktop':'/run/'+username+'/home/students/'+username+'/Desktop','Documents':'/run/'+username+'/home/students/'+username+'/Documents','share':'/run/'+username+'/share','groups_share':'/run/'+username+'/groups_share'}
+                        else:
+                            ret = True
+                    if ret:
+                        bind_paths={'Desktop':'/run/'+username+'/home/students/'+username+'/Desktop','Documents':'/run/'+username+'/home/students/'+username+'/Documents','share':'/run/'+username+'/share','groups_share':'/run/'+username+'/groups_share'}
+                        for bind in bind_paths:
+                            for x in mounts_info['BIND']:
+                                ret = False
+                                if x['mount_point'].startswith('/home/' + username) and x['mount_source'] == bind_paths[bind]:
+                                    ret = True
+                                    msg.append('Bindmount {} from {} available'.format(x['mount_point'],bind_paths[bind]))
+                                    break
+                            if not ret:
+                                msg.append('Bindmount {} from {} not available'.format(bind,bind_paths[bind]))
+                                break
+
+                elif session_type == 'THIN':
+                    pass
+            elif typeuser == 'teacher':
+                pass
+            elif typeuser == 'admin':
+                pass
+        elif release == 'server':
+            if typeuser == 'student':
+                if session_type == 'FAT' or session_type == 'SEMI':
+                    bind_paths={'Desktop':'/net/server-sync/home/students/'+username+'/Desktop','Documents':'/net/server-sync/home/students/'+username+'/Documents','share':'/net/server-sync/share/','groups_share':'/net/server-sync/groups_share'}
                     for bind in bind_paths:
                         for x in mounts_info['BIND']:
                             ret = False
@@ -45,12 +68,14 @@ class LlxUsers(Detector):
                             msg.append('Bindmount {} from {} not available'.format(bind,bind_paths[bind]))
                             break
 
-            elif session_type == 'THIN':
+                elif session_type == 'THIN':
+                    pass
+            elif typeuser == 'teacher':
                 pass
-        elif typeuser == 'teacher':
-            pass
-        elif typeuser == 'admin':
-            pass
+            elif typeuser == 'admin':
+                pass
+        else: # pyme, infantil, desktop, music
+            return (True,['Not in classroom model'])
         return (ret,msg)
 
     def run(self,*args,**kwargs):

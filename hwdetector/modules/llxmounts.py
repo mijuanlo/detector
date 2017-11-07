@@ -93,8 +93,12 @@ class LlxMounts(Detector):
             for bindmount in binds:
                 if src['root'] != bindmount['root']:
                     bindmount['mount_source'] = src['mount_point']+'/'+os.path.relpath(bindmount['root'],src['root'])
-                else:
+                elif src['fstype'] == 'cifs':
                     bindmount['mount_source'] = src['mount_point']
+                elif src['fstype'] == 'nfs':
+                    bindmount['mount_source'] = src['mount_point']+bindmount['mount_source'][len(src['mount_source']):]
+
+
                 bindmount.setdefault('is_binding','yes')
                 all_mounts.append(bindmount)
         #        print '{0} -> {1[mount_point]} ({1[mount_options]})'.format(src['mount_point'],bindmount)
