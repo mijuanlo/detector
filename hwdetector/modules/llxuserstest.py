@@ -13,8 +13,8 @@ class LlxUsersTest(Detector):
         msg=[]
         mounts_info=kwargs['MOUNTS_INFO']
         user_test=kwargs['USER_TEST']
-
-        msg=['{}\n'.format(user_test)]
+        for u in sorted(user_test.iterkeys()):
+            msg.append('{} {}\n'.format(u,user_test[u]))
 
         msg=''.join(msg)
         return {'LLXUSERS_TEST':{'status':status,'msg':msg}}

@@ -1,16 +1,15 @@
 #!/usr/bin/env python
 import hwdetector.Detector as Detector
 import utils.log as log
-import subprocess
 import re
 import os
-import sys
+
 
 log.debug("File "+__name__+" loaded")
 
 class LlxServices(Detector):
     _PROVIDES = ['SYSTEMCTL_INFO','APACHE_INFO','EPOPTES_INFO','DNSMASQ_INFO','SQUID_INFO']
-    _NEEDS = ['DPKG_INFO','N4D_STATUS','N4D_MODULES','HELPER_UNCOMMENT','NETINFO']
+    _NEEDS = ['HELPER_EXECUTE','DPKG_INFO','N4D_STATUS','N4D_MODULES','HELPER_UNCOMMENT','NETINFO']
 
     def run(self,*args,**kwargs):
         output={}
@@ -22,7 +21,7 @@ class LlxServices(Detector):
             has_apache=True
 
         # SYSTEMCTL
-        sysctl_out=subprocess.check_output(['systemctl','--plain','--no-legend','--no-pager','list-units','--all','-t','service'])
+        sysctl_out=self.execute(run='systemctl --plain --no-legend --no-pager list-units --all -t service')
         info={'BYUNIT':{},'BYLOAD':{},'BYACTIVE':{},'BYSUB':{}}
         regexp=re.compile(r'(?P<UNIT>[\w\-@]+).service\s+(?P<LOAD>\S+)\s+(?P<ACTIVE>\S+)\s+(?P<SUB>\S+)\s+(?P<NAME>.*$)')
         for line in sysctl_out.split('\n'):
@@ -39,6 +38,7 @@ class LlxServices(Detector):
 
         # APACHE
         output.update({'APACHE_INFO':None})
+
         if has_apache:
             apacheconf=''
             files=['/etc/apache2/apache2.conf','/etc/apache2/envvars','/etc/apache2/ports.conf']
@@ -53,10 +53,10 @@ class LlxServices(Detector):
                         apacheconf+=f.read()+"\n"
             apacheconf=self.uncomment(apacheconf)
             try:
-                syntax=subprocess.check_output(['apachectl','-t'],stderr=subprocess.STDOUT).strip()
+                syntax=self.execute(run='apachectl -t',stderr='stdout')
                 if 'syntax ok' in syntax.lower():
                     syntax = 'OK'
-                mod=subprocess.check_output(['apachectl','-M','-S'],stderr=open(os.devnull,'w')).split("\n")
+                mod=self.execute(run='apachectl -M -S',stderr=None).split("\n")
                 modules={}
                 ports_used={}
                 regexp=re.compile(r'^\s+(?P<module>\S+)\s+\((?P<type>static|shared)\)$')
@@ -75,9 +75,10 @@ class LlxServices(Detector):
                 if '80' in netinfo['netstat']['BYPORT']:
                     port_in_use=True
                 output.update({'APACHE_INFO':{'config':apacheconf,'syntax':syntax,'modules':modules,'PORT_USED':port_in_use}})
-            except:
+            except Exception as e:
                 output.update({'APACHE_INFO':None})
         # EPOPTES
+
         epoptes_info=None
         has_epoptes=False
         if [ x for x in dpkg_info['BYNAME'].keys() if x.lower().startswith('epoptes') ]:

@@ -14,7 +14,7 @@ try:
     log.debug("Instantiate HwDetector")
     hwd=hwdetector.HwDetector()
     #hwd.all_plugins_are_needed=True
-    #hwd.MAX_RUNNING_TIME = 1
+    #hwd.MAX_RUNNING_TIME = 3
     #hwd.fake_capabilities={'IAMGOD':'yes'}
     log.debug("Calling run plugins")
     ret = hwd.run(needs=['ALL_TESTS'])

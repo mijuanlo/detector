@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 import hwdetector.Detector as Detector
 import utils.log as log
-import subprocess
-import os
 import re
 import base64
 import hashlib
@@ -10,7 +8,7 @@ import hashlib
 log.debug("File "+__name__+" loaded")
 
 class LlxLdap(Detector):
-    _NEEDS = ['HELPER_FILE_FIND_LINE','HELPER_UNCOMMENT','HELPER_CHECK_OPEN_PORT','HELPER_DEMOTE','NETINFO']
+    _NEEDS = ['HELPER_EXECUTE','HELPER_FILE_FIND_LINE','HELPER_UNCOMMENT','HELPER_CHECK_OPEN_PORT','HELPER_DEMOTE','NETINFO']
     _PROVIDES = ['LDAP_INFO','LDAP_MODE','LDAP_MASTER_IP']
 
     def check_files(self,*args,**kwargs):
@@ -58,7 +56,7 @@ class LlxLdap(Detector):
         for p in ports:
             out[p]=self.check_open_port('server',p)
         try:
-            self.file_find_line(subprocess.check_output(['netstat','-nx']),'/var/run/slapd/ldapi')
+            self.file_find_line(self.execute(run='netstat -nx'),'/var/run/slapd/ldapi')
             out['LDAPI']=True
         except Exception as e:
             out['LDAPI']=False
@@ -128,11 +126,11 @@ class LlxLdap(Detector):
 
     def get_ldap_config(self,*args,**kwargs):
         try:
-            db=subprocess.check_output(['ldapsearch','-Y','EXTERNAL','-H','ldapi:///','-LLL'],stderr=open(os.devnull,'w'), preexec_fn=self.demote)
+            db=self.execute(run='ldapsearch -Y EXTERNAL -H ldapi:/// -LLL',stderr=None,asroot=True)
         except:
             db=None
         try:
-            config=subprocess.check_output(['ldapsearch','-Y','EXTERNAL','-H','ldapi:///','-b','cn=config','-LLL'],stderr=open(os.devnull,'w'), preexec_fn=self.demote)
+            config=self.execute(run='ldapsearch -Y EXTERNAL -H ldapi:/// -b cn=config -LLL',stderr=None, asroot=True)
         except:
             config=None
         tree_db=self.parse_tree(db)

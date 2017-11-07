@@ -5,11 +5,12 @@ import re
 import urllib2 as urllib
 import os.path
 import grp,pwd
+import subprocess,time
 
 log.debug("File "+__name__+" loaded")
 
 class LlxHelpers(Detector):
-    _PROVIDES = ['HELPER_UNCOMMENT',"HELPER_GET_FILE_FROM_NET",'HELPER_FILE_FIND_LINE','HELPER_DEMOTE','HELPER_CHECK_ROOT','HELPER_WHO_I_AM']
+    _PROVIDES = ['HELPER_EXECUTE','HELPER_UNCOMMENT',"HELPER_GET_FILE_FROM_NET",'HELPER_FILE_FIND_LINE','HELPER_DEMOTE','HELPER_CHECK_ROOT','HELPER_WHO_I_AM','HELPER_USERS_LOGGED']
     _NEEDS = []
 
     # def _close_stderr(self):
@@ -157,6 +158,60 @@ class LlxHelpers(Detector):
         groups = [group[0] for group in grp.getgrall() if user_name in group[3]]
         return {'id':euid,'user_info':user_info,'name':user_name,'groups':groups}
 
+    def users_logged(self,*args,**kwargs):
+        l={}
+        for u in self.execute(run='users').split(' '):
+            l.setdefault(u,True)
+        return l.keys()
+
+    def execute(self,timeout=3.0,shell=False,*args,**kwargs):
+        params={}
+        if 'run' not in kwargs:
+            return None
+        else:
+            if type(kwargs['run']) != type(list()):
+                runlist=kwargs['run'].split(' ')
+            else:
+                runlist=kwargs['run']
+        timeout_remaning=float(timeout)
+        #Ready for python3
+        #params.setdefault('timeout',int(timeout))
+        #Python 2 code
+        delay=0.1
+        if 'stderr' in kwargs:
+            if kwargs['stderr'] == 'stdout':
+                params.setdefault('stderr',subprocess.STDOUT)
+            if kwargs['stderr'] == None or kwargs['stderr'] == 'no':
+                params.setdefault('stderr',open(os.devnull,'w'))
+        params.setdefault('stdout',subprocess.PIPE)
+        with_uncomment=False
+        if 'nocomment' in kwargs:
+            if kwargs['nocomment'] == True or kwargs['nocomment'] == 'yes':
+                with_uncomment=True
+
+        if 'asroot' in kwargs:
+            if kwargs['asroot'] == True or kwargs['asroot'] == 'yes':
+                params.setdefault('preexec_fn', self.demote)
+        params.setdefault('shell',shell)
+        stdout=None
+        stderr=None
+        try:
+            start=time.time()
+            p=subprocess.Popen(runlist,**params)
+            while p.poll() is None and timeout_remaning > 0:
+                time.sleep(delay)
+                timeout_remaning -= delay
+                stdout,stderr = p.communicate()
+            if timeout_remaning <= 0:
+                raise Exception('timeout({}) exceded while executing {}'.format(timeout,kwargs['run']))
+        except Exception as e:
+            log.error('Error executing: {}'.format(e))
+            return None
+        if with_uncomment:
+            return self.uncomment(stdout.strip())
+        else:
+            return stdout.strip()
+
     def run(self,*args,**kwargs):
         return {
             'HELPER_UNCOMMENT':{'code':self.uncomment,'glob':globals()},
@@ -164,5 +219,7 @@ class LlxHelpers(Detector):
             'HELPER_FILE_FIND_LINE':{'code': self.file_find_line, 'glob': globals()},
             'HELPER_DEMOTE':{'code':self.demote,'glob':globals()},
             'HELPER_CHECK_ROOT':{'code':self.check_root,'glob':globals()},
-            'HELPER_WHO_I_AM':{'code':self.who_i_am,'glob':globals()}
+            'HELPER_WHO_I_AM':{'code':self.who_i_am,'glob':globals()},
+            'HELPER_EXECUTE':{'code':self.execute,'glob':globals()},
+            'HELPER_USERS_LOGGED':{'code':self.users_logged,'glob':globals()}
                 }

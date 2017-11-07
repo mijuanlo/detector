@@ -2,12 +2,11 @@
 import hwdetector.Detector as Detector
 import utils.log as log
 import os
-import subprocess
 
 log.debug("File "+__name__+" loaded")
 
 class LlxUsers(Detector):
-    _NEEDS = ['LDAP_INFO','MOUNTS_INFO','LLIUREX_SESSION_TYPE','LLIUREX_RELEASE','HELPER_WHO_I_AM','LOGIN_TYPE']
+    _NEEDS = ['HELPER_EXECUTE','HELPER_USERS_LOGGED','LDAP_INFO','MOUNTS_INFO','LLIUREX_SESSION_TYPE','LLIUREX_RELEASE','HELPER_WHO_I_AM','LOGIN_TYPE']
     _PROVIDES = ['USERS_INFO','USER_TEST']
 
 
@@ -57,6 +56,8 @@ class LlxUsers(Detector):
     def run(self,*args,**kwargs):
         output={}
         LDAP_INFO=kwargs['LDAP_INFO']
+        logged_users=self.users_logged()
+        myinfo=self.who_i_am()
 
         try:
             people=LDAP_INFO['CONFIG']['DB']['net']['lliurex']['ma5']['People']
@@ -65,7 +66,6 @@ class LlxUsers(Detector):
             teachers=[(x,people['Teachers'][x]) for x in people['Teachers'].keys() if type(people['Teachers'][x]) == type(dict())]
         except Exception as e:
             people = None # NO LDAP ACCESS DO IT ONLY FOR ME
-            myinfo=self.who_i_am()
             fake_ldap_info=(myinfo['name'],{'homeDirectory':[myinfo['user_info'][5]],'uid':[myinfo['name']]})
             users=[]
             admins=[]
@@ -81,7 +81,7 @@ class LlxUsers(Detector):
 
         homes = ['/home/'+x for x in os.listdir('/home/')]
         cmd = ['getfacl','-tp'] + homes
-        perm_info=subprocess.check_output(cmd,stderr=open(os.devnull,'w')).split("\n")
+        perm_info=self.execute(run=cmd,stderr=None).split("\n")
         perm_dirs={}
         i=-1
         file=None
@@ -125,7 +125,10 @@ class LlxUsers(Detector):
                     except:
                         output[u]['PERM_OK']=False
 
-                    output[u]['MOUNTS_OK']=self.check_mounts(u,'student',**kwargs)
+                    if u in logged_users:
+                        output[u]['MOUNTS_OK']=self.check_mounts(u,'student',**kwargs)
+                    else:
+                        output[u]['MOUNTS_OK']='NOT_LOGGED_IN'
                 else:
                     output[u]={'HAS_HOME': False}
 
