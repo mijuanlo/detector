@@ -56,7 +56,7 @@ class LlxUsers(Detector):
         elif release == 'server':
             if typeuser == 'student':
                 if session_type == 'FAT' or session_type == 'SEMI':
-                    bind_paths={'Desktop':'/net/server-sync/home/students/'+username+'/Desktop','Documents':'/net/server-sync/home/students/'+username+'/Documents','share':'/net/server-sync/share/','groups_share':'/net/server-sync/groups_share'}
+                    bind_paths={'Desktop':'/net/server-sync/home/students/'+username+'/Desktop','Documents':'/net/server-sync/home/students/'+username+'/Documents','share':'/net/server-sync/share','groups_share':'/net/server-sync/groups_share'}
                     for bind in bind_paths:
                         for x in mounts_info['BIND']:
                             ret = False
