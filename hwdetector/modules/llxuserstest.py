@@ -45,7 +45,7 @@ class LlxUsersTest(Detector):
                             status = False
                 if status:
                     msg.append(self.make_result(result=['Home of user {} seems with good permission,owners and acl\'s'.format(u)],msg='Ok!'))
-                    if user_test[u]['MOUNTS_OK'][1] == 'NOT_LOGGED_IN':
+                    if 'NOT_LOGGED_IN' in user_test[u]['MOUNTS_OK'][1]:
                         msg.append(self.make_result(result='User {} not logged in, so i can\'t expect to analyze any mounts'.format(u),msg=''))
                     else:
                         msg.append(self.make_result(result=['User {} has correct mounts, detection says'.format(u)],msg=''))
