@@ -3,6 +3,7 @@ import hwdetector.Detector as Detector
 import utils.log as log
 import re
 import os
+import base64,zlib
 
 
 log.debug("File "+__name__+" loaded")
@@ -99,7 +100,7 @@ class LlxServices(Detector):
                 logfile = None
                 if os.path.exists('/var/log/epoptes.log'):
                     with open('/var/log/epoptes.log','r') as f:
-                        logfile = f.read().strip()
+                        logfile = base64.b64encode(zlib.compress(f.read().strip()))
 
                 epoptes_info={'logfile':logfile,'PORT_USED':port_in_use}
 
