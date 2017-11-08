@@ -86,7 +86,7 @@ class LlxUsers(Detector):
             elif release == 'client':
                 if session_type != 'THIN':
                     samba_shares = {'home':'home','share':'share', 'groups_share':'groups_share', 'share_teachers':'teachers_share'}
-                nfs_bind_paths={'Desktop':'/run/'+username+'/home/teachers/'+username+'/Desktop','Documents':'/run/'+username+'/home/teachers/'+username+'/Documents','share':'/run/'+username+'/share','groups_share':'/run/'+username+'/groups_share','teachers_share':'/run/'+username+'/teachers_share','/home/students':'/home/students'}
+                nfs_bind_paths={'Desktop':'/run/'+username+'/home/teachers/'+username+'/Desktop','Documents':'/run/'+username+'/home/teachers/'+username+'/Documents','share':'/run/'+username+'/share','groups_share':'/run/'+username+'/groups_share','teachers_share':'/run/'+username+'/teachers_share','/home/students':'/run/'+username+'/home/students'}
         elif typeuser == 'admin':
             if release == 'server':
                 nfs_bind_paths={'Desktop':'/net/server-sync/home/admins/'+username+'/Desktop','Documents':'/net/server-sync/home/admins/'+username+'/Documents','share':'/net/server-sync/share','groups_share':'/net/server-sync/groups_share'}

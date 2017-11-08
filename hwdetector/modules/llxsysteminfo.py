@@ -2,34 +2,32 @@
 import hwdetector.Detector as Detector
 import utils.log as log
 import json
-import subprocess
 import os
-#import fnmatch
 import re
 
 log.debug("File "+__name__+" loaded")
 
 class LlxSystemInfo(Detector):
-    _NEEDS=[]
+    _NEEDS=['HELPER_EXECUTE']
     _PROVIDES=['LSHW_INFO','DMESG_INFO','VARLOG_INFO','LSUSB_INFO','DMESG_JOURNAL_INFO']
 
     def get_lshw(self,*args,**kwargs):
         try:
-            lsusb=json.loads(subprocess.check_output(['lshw','-json'],stderr=open(os.devnull,'w')))
+            lsusb=json.loads(self.execute(run='lshw -json',stderr=None))
             return lsusb
         except Exception as e:
             return None
 
     def get_dmesg(self,*args,**kwargs):
         try:
-            dmesg=json.loads(subprocess.check_output(['journalctl','-o','json','--dmesg','--reverse','--since','today']))
+            dmesg=json.loads(self.execute(run='journalctl -o json --dmesg --reverse --since today',stderr=None))
             return dmesg
         except Exception as e:
             return None
 
     def get_dmesg2(self,*args,**kwargs):
         try:
-            dmesg=subprocess.check_output(['dmesg'])
+            dmesg=self.execute(run='dmesg',stderr=None)
             return dmesg
         except Exception as e:
             return None
@@ -58,7 +56,7 @@ class LlxSystemInfo(Detector):
     def get_lsusb(self,*args,**kwargs):
         lsusb={}
         try:
-            lsusb=subprocess.check_output(['lsusb'],stderr=open(os.devnull,'w'))
+            lsusb=self.execute(run='lsusb',stderr=None)
             return lsusb
         except Exception as e:
             return None
