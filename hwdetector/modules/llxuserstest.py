@@ -22,12 +22,12 @@ class LlxUsersTest(Detector):
         return ret
 
     def run(self,*args,**kwargs):
-        status=True
         msg=[]
         msg_debug=[]
         mounts_info=kwargs['MOUNTS_INFO']
         user_test=kwargs['USER_TEST']
         for u in sorted(user_test.iterkeys()):
+            status=True
             if user_test[u]['HAS_HOME']:
                 msg_debug.append('\n{}\n'.format(u.upper()))
                 for k in user_test[u]:
