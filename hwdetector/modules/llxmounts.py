@@ -3,8 +3,6 @@ import hwdetector.Detector as Detector
 import utils.log as log
 import re
 import os
-import subprocess
-import json
 
 log.debug("File "+__name__+" loaded")
 

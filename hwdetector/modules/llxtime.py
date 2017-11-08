@@ -1,21 +1,19 @@
 #!/usr/bin/env python
 import hwdetector.Detector as Detector
 import utils.log as log
-import subprocess
 import re
-import os
 
 log.debug("File "+__name__+" loaded")
 
 class LlxTime(Detector):
 
     _PROVIDES = ['TIME','NTP_INFO']
-    _NEEDS = ["HELPER_UNCOMMENT"]
+    _NEEDS = ["HELPER_UNCOMMENT","HELPER_EXECUTE"]
 
     def run(self,*args,**kwargs):
         output={}
 
-        timedatectl=subprocess.check_output(['timedatectl'],stderr=open(os.devnull,'w')).strip()
+        timedatectl=self.execute(run='timedatectl',stderr=None)
 
         m=re.search(r'Local time:\s\w+ (?P<TIMESW>\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\s\w+)',timedatectl)
         if m:
@@ -35,7 +33,7 @@ class LlxTime(Detector):
 
         synced = False
         try:
-            ntp_st = subprocess.check_output(["ntpq", "-pn"], stderr=open(os.devnull, 'w'))
+            ntp_st = self.execute(run="ntpq -pn", stderr=None)
             for line in ntp_st.split("\n"):
                 m = re.search(r'^\*(?P<SYNCSERVER>\d+\.\d+\.\d+\.\d+)', line)
                 if m:

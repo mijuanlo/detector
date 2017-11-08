@@ -1,21 +1,19 @@
 #!/usr/bin/env python
 import hwdetector.Detector as Detector
 import utils.log as log
-import subprocess
 import re
 from os import listdir
 from os import environ
-import os
 
 log.debug("File "+__name__+" loaded")
 
 class LlxNetwork(Detector):
 
     _PROVIDES=["NETINFO"]
-    _NEEDS=['HELPER_UNCOMMENT',"HELPER_GET_FILE_FROM_NET"]
+    _NEEDS=['HELPER_UNCOMMENT',"HELPER_GET_FILE_FROM_NET","HELPER_EXECUTE"]
 
     def get_routes(self,*args,**kwargs):
-        routes = subprocess.check_output(["ip", "r"],stderr=open(os.devnull,'w')).strip().split("\n")
+        routes = self.execute(run="ip r",stderr=None).split("\n")
         rt = {}
         rt['names'] = {}
         rt['names']['bynet'] = {}
@@ -69,7 +67,7 @@ class LlxNetwork(Detector):
 
         for dev in devs:
             aliasnum = 1
-            info = subprocess.check_output(["ip", "addr", "show", dev],stderr=open(os.devnull,'w')).replace("\n", "")
+            info = self.execute(run="ip addr show "+dev,stderr=None).replace("\n", "")
             for i in range(0, len(regif)):
                 m = [x for x in re.finditer(regif[i], info)]
                 for x in m:
@@ -101,7 +99,7 @@ class LlxNetwork(Detector):
                 output[x]=environ[x]
 
         try:
-            o = subprocess.check_output(["dconf",'dump','/system/proxy/'],stderr=open(os.devnull,'w')).strip()
+            o = self.execute(run="dconf dump /system/proxy/",stderr=None)
             save_next=False
             prev= None
             skip_line=False
@@ -146,7 +144,7 @@ class LlxNetwork(Detector):
         return output
 
     def get_listens(self,*args,**kwargs):
-        netstat_listen=subprocess.check_output(['netstat','-4tuln']).split("\n")
+        netstat_listen=self.execute(run='netstat -4tuln',stderr=None).split("\n")
         # TODO:CHECK PROCESS USING PORT AND STORE IT
         regexp=re.compile(r'(?P<PROTO>\w+)\s+\d+\s+\d+\s+(?P<LISTEN_ON>[^:\s]+):(?P<PORT>\d+)\s+.*$')
         netstat_info={'BYPROTO':{},'BYPORT':{}}

@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 import hwdetector.Detector as Detector
 import utils.log as log
-import json
-import subprocess
 
 log.debug("File "+__name__+" loaded")
 

@@ -2,8 +2,6 @@
 import hwdetector.Detector as Detector
 import utils.log as log
 import re
-import os
-import subprocess
 
 log.debug("File "+__name__+" loaded")
 
@@ -26,7 +24,6 @@ class Object(object):
                 ret[i]=None
         return ret
 
-
 class LlxProcess(Detector):
 
     _PROVIDES = ['PROCESS_INFO']
@@ -35,7 +32,7 @@ class LlxProcess(Detector):
     def run(self,*args,**kwargs):
         output=[]
 
-        psout=subprocess.check_output(['ps','--no-headers','-Awwo','pid,euid,egid,args'])
+        psout=self.execute(run='ps --no-headers -Awwo pid,euid,egid,args')
         regexp=re.compile(r'(?P<PID>\d+)\s+(?P<EUID>\d+)\s+(?P<EGID>\d+)\s+(?P<FULL_CMD>.*)$')
         for line in psout.split("\n"):
             m=re.search(regexp,line)

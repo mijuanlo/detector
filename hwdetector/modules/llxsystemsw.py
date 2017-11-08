@@ -1,20 +1,18 @@
 #!/usr/bin/env python
 import hwdetector.Detector as Detector
 import utils.log as log
-import subprocess
 import re
-import os
-import sys
+
 
 log.debug("File "+__name__+" loaded")
 
 class LlxSystemSW(Detector):
-    _PROVIDES = ['DPKG_INFO']
+    _PROVIDES = ['DPKG_INFO','HELPER_EXECUTE']
     _NEEDS = []
 
     def run(self,*args,**kwargs):
         output={}
-        pkg_list=subprocess.check_output(['dpkg','-l']).strip("\n")
+        pkg_list=self.execute(run='dpkg -l').strip("\n")
 
         dpkg_info={'BYNAME':{},'BYSTATUS':{}}
         regexp=re.compile(r'^(?P<STATUS>\w+)\s+(?P<PACKAGE>[^:\s]+)(:(?P<PACKAGE_ARCHITECTURE>\S+))?\s+(?P<VERSION>\S+)\s+(?P<BUILD_ARCHITECTURE>\S+)\s+(?P<DESCRIPTION>.*)$')
