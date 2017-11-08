@@ -193,6 +193,8 @@ class LlxUsers(Detector):
                     users.append(fake_ldap_info)
                 elif 'teachers' in myinfo['groups']:
                     teachers.append(fake_ldap_info)
+                elif 'admins' in myinfo['groups']:
+                    admins.append(fake_ldap_info)
 
 
         # USER TEST FUNCTIONALITY
