@@ -293,8 +293,6 @@ class LlxUsers(Detector):
                             perm_dirs[homedir]['USER'][user] == 'rwx' \
                             and perm_dirs[homedir]['user'][user] == 'rwx' \
                             and perm_dirs[homedir]['GROUP']['nogroup'] == 'r-x' \
-                            and perm_dirs[homedir]['group']['students'] == '---' \
-                            and perm_dirs[homedir]['group']['teachers'] == 'rwx' \
                             and perm_dirs[homedir]['group']['admins'] == 'rwx' \
                             and perm_dirs[homedir]['other'] == '---'
                     except:
