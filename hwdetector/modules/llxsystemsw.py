@@ -8,7 +8,7 @@ log.debug("File "+__name__+" loaded")
 
 class LlxSystemSW(Detector):
     _PROVIDES = ['DPKG_INFO','HELPER_EXECUTE']
-    _NEEDS = []
+    _NEEDS = ['HELPER_EXECUTE']
 
     def run(self,*args,**kwargs):
         output={}
