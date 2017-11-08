@@ -270,6 +270,11 @@ class LlxUsers(Detector):
                     except:
                         output[u]['PERM_OK']=False
 
+                    if u in logged_users:
+                        output[u]['MOUNTS_OK']=self.check_mounts(u,'teacher',**kwargs)
+                    else:
+                        output[u]['MOUNTS_OK']=(None,['NOT_LOGGED_IN'])
+
                 else:
                     output[u]={'HAS_HOME': False}
 
@@ -294,6 +299,11 @@ class LlxUsers(Detector):
                             and perm_dirs[homedir]['other'] == '---'
                     except:
                         output[u]['PERM_OK']=False
+
+                    if u in logged_users:
+                        output[u]['MOUNTS_OK']=self.check_mounts(u,'admin',**kwargs)
+                    else:
+                        output[u]['MOUNTS_OK']=(None,['NOT_LOGGED_IN'])
 
                 else:
                     output[u]={'HAS_HOME': False}
