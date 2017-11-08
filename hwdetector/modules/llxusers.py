@@ -26,7 +26,7 @@ class LlxUsers(Detector):
             msgs=[]
             ret = True
             for share in shares:
-                mountpoint='/run/' + username + '/' + share
+                mountpoint='/run/' + username + '/' + shares[share]
                 mountsource='//server/'+share
                 for x in mounts_info['NETWORK']:
                     ret = False
@@ -35,7 +35,7 @@ class LlxUsers(Detector):
                         msg.append('Samba share {} mounted under {}'.format(mountsource,mountpoint))
                         break
                 if not ret:
-                    msgs.append('Samba share {} not mounted under {}'.format(mountsource,mountpoint))
+                    msgs.append('Samba share {} NOT mounted under {}'.format(mountsource,mountpoint))
                     break
                 else:
                     ret = True
@@ -78,21 +78,21 @@ class LlxUsers(Detector):
                 nfs_bind_paths={'Desktop':'/net/server-sync/home/students/'+username+'/Desktop','Documents':'/net/server-sync/home/students/'+username+'/Documents','share':'/net/server-sync/share','groups_share':'/net/server-sync/groups_share'}
             elif release == 'client':
                 if session_type != 'THIN':
-                    samba_shares = ['home','share','groups_share']
+                    samba_shares = {'home':'home','share':'share','groups_share':'groups_share'}
                 nfs_bind_paths={'Desktop':'/run/'+username+'/home/students/'+username+'/Desktop','Documents':'/run/'+username+'/home/students/'+username+'/Documents','share':'/run/'+username+'/share','groups_share':'/run/'+username+'/groups_share'}
         elif typeuser == 'teacher':
             if release == 'server':
                 nfs_bind_paths={'Desktop':'/net/server-sync/home/teachers/'+username+'/Desktop','Documents':'/net/server-sync/home/teachers/'+username+'/Documents','share':'/net/server-sync/share','groups_share':'/net/server-sync/groups_share','teachers_share':'/net/server-sync/teachers_share','/home/students':'/home/students'}
             elif release == 'client':
                 if session_type != 'THIN':
-                    samba_shares = ['home','share', 'group_share', 'share_teachers']
+                    samba_shares = {'home':'home','share':'share', 'groups_share':'groups_share', 'share_teachers':'teachers_share'}
                 nfs_bind_paths={'Desktop':'/run/'+username+'/home/teachers/'+username+'/Desktop','Documents':'/run/'+username+'/home/teachers/'+username+'/Documents','share':'/run/'+username+'/share','groups_share':'/run/'+username+'/groups_share','teachers_share':'/run/'+username+'/teachers_share','/home/students':'/home/students'}
         elif typeuser == 'admin':
             if release == 'server':
                 nfs_bind_paths={'Desktop':'/net/server-sync/home/admins/'+username+'/Desktop','Documents':'/net/server-sync/home/admins/'+username+'/Documents','share':'/net/server-sync/share','groups_share':'/net/server-sync/groups_share'}
             elif release == 'client':
                 if session_type != 'THIN':
-                    samba_shares = ['home','share','groups_share','share_teachers']
+                    samba_shares = {'home':'home','share':'share','groups_share':'groups_share','share_teachers':'teachers_share'}
                 nfs_bind_paths={'Desktop':'/run/'+username+'/home/admins/'+username+'/Desktop','Documents':'/run/'+username+'/home/admins/'+username+'/Documents','share':'/run/'+username+'/share','groups_share':'/run/'+username+'/groups_share'}
 
         ret, msgs = check_mount_network(username,samba_shares,mounts_info)
