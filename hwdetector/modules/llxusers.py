@@ -40,7 +40,7 @@ class LlxUsers(Detector):
                 else:
                     ret = True
             return (ret,msgs)
-        def check_binds(username,bind_paths,mounts_info):
+        def check_binds(username,bind_paths,mounts_info,nfs_server):
             msgs = []
             ret = True
             for bind in bind_paths:
@@ -49,10 +49,26 @@ class LlxUsers(Detector):
                     if x['mount_point'].startswith('/home/' + username) and x['mount_source'] == bind_paths[bind]:
                         ret = True
                         msg.append('Bindmount {} from {} available'.format(x['mount_point'],bind_paths[bind]))
+                        if nfs_server:
+                            for x2 in mounts_info['NETWORK']:
+                                ret2 = False
+                                if x2['devid'] == x['devid'] and x2['mount_source'].startswith(nfs_server):
+                                    ret2 = True
+                                    msg.append('Referred share ({}) from bindmount ({}) is mounted from server ({})'.format(x2['mount_point'],x['mount_source'],nfs_server))
+                                    break
+                            if not ret2:
+                                msg.append('Referred share ({}) from bindmount ({}) NOT mounted from server ({})'.format(x2['mount_point'],x['mount_source'],nfs_server))
+                                ret = False
+                                break
+                        else:
+                            ret2 = True
+                            msg.append('Mounting from local without nfs, skipped checking')
+
                         break
                 if not ret:
-                    msg.append('Bindmount {} from {} not available'.format(bind,bind_paths[bind]))
+                    msg.append('Bindmount {} from {} NOT available'.format(bind,bind_paths[bind]))
                     break
+
             return (ret,msgs)
 
         samba_shares = []
@@ -82,7 +98,7 @@ class LlxUsers(Detector):
         ret, msgs = check_mount_network(username,samba_shares,mounts_info)
         msg.extend(msgs)
         if ret:
-            ret,msgs=check_binds(username,nfs_bind_paths,mounts_info)
+            ret,msgs=check_binds(username,nfs_bind_paths,mounts_info,nfs_server)
             msg.extend(msgs)
 
         return (ret,msg)
@@ -229,7 +245,7 @@ class LlxUsers(Detector):
                     if u in logged_users:
                         output[u]['MOUNTS_OK']=self.check_mounts(u,'student',**kwargs)
                     else:
-                        output[u]['MOUNTS_OK']='NOT_LOGGED_IN'
+                        output[u]['MOUNTS_OK']=(None,['NOT_LOGGED_IN'])
                 else:
                     output[u]={'HAS_HOME': False}
 
