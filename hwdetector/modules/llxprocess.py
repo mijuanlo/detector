@@ -27,7 +27,7 @@ class Object(object):
 class LlxProcess(Detector):
 
     _PROVIDES = ['PROCESS_INFO']
-    _NEEDS = []
+    _NEEDS = ['HELPER_EXECUTE']
 
     def run(self,*args,**kwargs):
         output=[]
