@@ -218,7 +218,7 @@ class LlxHelpers(Detector):
             else:
                 return stdout.strip()
         else:
-            log.warning("Execution of {} hasn't produced any result, returning None")
+            log.error("Execution of {} hasn't produced any result, returning None".format(kwargs['run']))
             return None
 
     def run(self,*args,**kwargs):
