@@ -53,5 +53,5 @@ class LlxUsersTest(Detector):
 
         msg=''.join(msg)
         msg_debug=''.join(msg_debug)
-        log.info(msg_debug)
+        log.debug(msg_debug)
         return {'LLXUSERS_TEST':{'status':status,'msg':msg}}
