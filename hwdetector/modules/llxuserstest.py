@@ -23,6 +23,7 @@ class LlxUsersTest(Detector):
 
     def run(self,*args,**kwargs):
         msg=[]
+        status = False
         msg_debug=[]
         mounts_info=kwargs['MOUNTS_INFO']
         user_test=kwargs['USER_TEST']
