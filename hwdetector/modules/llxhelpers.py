@@ -10,7 +10,7 @@ import subprocess,time
 log.debug("File "+__name__+" loaded")
 
 class LlxHelpers(Detector):
-    _PROVIDES = ['HELPER_EXECUTE','HELPER_UNCOMMENT',"HELPER_GET_FILE_FROM_NET",'HELPER_FILE_FIND_LINE','HELPER_DEMOTE','HELPER_CHECK_ROOT','HELPER_WHO_I_AM','HELPER_USERS_LOGGED']
+    _PROVIDES = ['HELPER_EXECUTE','HELPER_UNCOMMENT',"HELPER_GET_FILE_FROM_NET",'HELPER_FILE_FIND_LINE','HELPER_DEMOTE','HELPER_CHECK_ROOT','HELPER_WHO_I_AM','HELPER_USERS_LOGGED','ROOT_MODE']
     _NEEDS = []
 
     # def _close_stderr(self):
@@ -225,6 +225,7 @@ class LlxHelpers(Detector):
 
     def run(self,*args,**kwargs):
         return {
+            'ROOT_MODE': self.check_root(),
             'HELPER_UNCOMMENT':{'code':self.uncomment,'glob':globals()},
             'HELPER_GET_FILE_FROM_NET': {'code': self.get_file_from_net, 'glob': globals()},
             'HELPER_FILE_FIND_LINE':{'code': self.file_find_line, 'glob': globals()},

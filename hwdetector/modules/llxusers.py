@@ -6,7 +6,7 @@ import os
 log.debug("File "+__name__+" loaded")
 
 class LlxUsers(Detector):
-    _NEEDS = ['HELPER_EXECUTE','HELPER_USERS_LOGGED','LDAP_INFO','MOUNTS_INFO','LLIUREX_SESSION_TYPE','LLIUREX_RELEASE','HELPER_WHO_I_AM','LOGIN_TYPE','LDAP_MODE','NFS_INITIALIZATION']
+    _NEEDS = ['HELPER_EXECUTE','HELPER_USERS_LOGGED','LDAP_INFO','MOUNTS_INFO','LLIUREX_SESSION_TYPE','LLIUREX_RELEASE','HELPER_WHO_I_AM','LOGIN_TYPE','LDAP_MODE','NFS_INITIALIZATION','ROOT_MODE']
     _PROVIDES = ['USERS_INFO','USER_TEST']
 
 
@@ -182,7 +182,10 @@ class LlxUsers(Detector):
             admins=[(x,people['Admins'][x]) for x in people['Admins'].keys() if type(people['Admins'][x]) == type(dict())]
             teachers=[(x,people['Teachers'][x]) for x in people['Teachers'].keys() if type(people['Teachers'][x]) == type(dict())]
         except Exception as e:
-            log.warning("No access to ldap database, maybe running non-root mode")
+            if kwargs['ROOT_MODE'] == False:
+                log.warning("No access to ldap database, running non-root mode")
+            else:
+                log.error('Fail getting needed ldap information')
             people = None # NO LDAP ACCESS DO IT ONLY FOR ME
             fake_ldap_info=(myinfo['name'],{'homeDirectory':[myinfo['user_info'][5]],'uid':[myinfo['name']]})
             users=[]
