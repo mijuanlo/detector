@@ -207,6 +207,8 @@ class LlxHelpers(Detector):
                 time.sleep(delay)
                 timeout_remaning -= delay
                 stdout,stderr = p.communicate()
+            if stdout is None:
+                stdout,stderr = p.communicate()
             if timeout_remaning <= 0:
                 raise Exception('timeout({}) exceded while executing {}'.format(timeout,kwargs['run']))
         except Exception as e:
