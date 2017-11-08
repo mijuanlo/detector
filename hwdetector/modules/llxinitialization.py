@@ -17,12 +17,15 @@ class LlxInitialization(Detector):
         output.update({'HOSTNAME':self.uncomment('/etc/hostname')})
         mapping={'CLIENT_LDAP_URI':'SERVER_LDAP','INTERNAL_INTERFACE':'INTERNAL_INTERFACE','EXTERNAL_INTERFACE':'EXTERNAL_INTERFACE'}
         for search_var in mapping:
-            if search_var in n4d_vars:
+            if search_var in n4d_vars and 'value' in n4d_vars[search_var]:
                 output.update({mapping[search_var]:n4d_vars[search_var]['value']})
-        line=r'What = (\d+(?:\.\d+){3}):/net/server-sync'
-        line=''.join(self.file_find_line(r'/lib/systemd/system/net-server\x2dsync.mount',line))
+            else:
+                output.update({mapping[search_var]:None})
+        line=self.file_find_line(r'/lib/systemd/system/net-server\x2dsync.mount',r'What = (\d+(?:\.\d+){3}):/net/server-sync')
         if line:
-            ssync_from=line
+            ssync_from=''.join(line)
+        else:
+            ssync_from=None
         output.update({'NFS_INITIALIZATION':ssync_from})
 
         return output
