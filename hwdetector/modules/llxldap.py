@@ -12,12 +12,19 @@ class LlxLdap(Detector):
     _PROVIDES = ['LDAP_INFO','LDAP_MODE','LDAP_MASTER_IP']
 
     def check_files(self,*args,**kwargs):
+        release=args[0]
+        mode=args[1].lower()
+        if mode == 'independent':
+            server = 'server'
+        else:
+            server = 'localhost'
+
         output={}
         content_ldap_conf=self.uncomment("/etc/ldap.conf")
         ldap_conf_ok = self.file_find_line(content_ldap_conf,
         [
             ['^base','dc=ma5,dc=lliurex,dc=net'],
-            ['^uri','ldap://localhost'],
+            ['^uri','ldap://'+server],
             ['^nss_base_group','ou=Groups,dc=ma5,dc=lliurex,dc=net'],
             ['^nss_map_attribute','gecos','description']
         ])
@@ -25,7 +32,7 @@ class LlxLdap(Detector):
         etc_ldap_ldap_conf_ok = self.file_find_line(content_etc_ldap_ldap_conf,
         [
             ['^BASE','dc=ma5,dc=lliurex,dc=net'],
-            ['^URI','ldaps://localhost']
+            ['^URI','ldaps://'+server]
         ])
         if ldap_conf_ok:
             output['etc_ldap_conf']={'syntax':'OK','content':content_ldap_conf}
@@ -174,15 +181,14 @@ class LlxLdap(Detector):
     def run(self,*args,**kwargs):
         out = {'LDAP_MASTER_IP':None}
         output = {}
-
+        release=kwargs['LLIUREX_RELEASE']
         self.read_pass()
 
-        output['FILES'] = self.check_files()
         output['PORTS'] = self.check_ports()
         mode=None
 
         if output['PORTS']['636']:
-            output['CONFIG']=self.get_ldap_config(kwargs['LLIUREX_RELEASE'])
+            output['CONFIG']=self.get_ldap_config(release)
             mode='UNKNOWN'
             try:
                 test=output['CONFIG']['INITIALIZED']
@@ -210,6 +216,7 @@ class LlxLdap(Detector):
                                 elif ip_alias=='254':
                                     mode='MASTER'
 
+        output['FILES'] = self.check_files(release,mode)
         out.update( {'LDAP_INFO':output,'LDAP_MODE':mode})
 
         return out
