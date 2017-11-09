@@ -8,7 +8,7 @@ import hashlib
 log.debug("File "+__name__+" loaded")
 
 class LlxLdap(Detector):
-    _NEEDS = ['HELPER_EXECUTE','HELPER_FILE_FIND_LINE','HELPER_UNCOMMENT','HELPER_CHECK_OPEN_PORT','HELPER_DEMOTE','NETINFO']
+    _NEEDS = ['HELPER_EXECUTE','HELPER_FILE_FIND_LINE','HELPER_UNCOMMENT','HELPER_CHECK_OPEN_PORT','LLIUREX_RELEASE','HELPER_CHECK_ROOT','NETINFO']
     _PROVIDES = ['LDAP_INFO','LDAP_MODE','LDAP_MASTER_IP']
 
     def check_files(self,*args,**kwargs):
@@ -113,28 +113,50 @@ class LlxLdap(Detector):
                 out.update({k:d[k]})
         return out
 
+    def read_pass(self):
+        self.pwd=None
+        try:
+            with open('/etc/ldap.secret','r') as f:
+                self.pwd=f.read().strip()
+        except:
+            pass
+
     def checkpass(self,*args,**kwargs):
         p=args[0]
-        pwd=None
-        with open('/etc/ldap.secret','r') as f:
-            pwd=f.read().strip()
-        if pwd:
+        if self.pwd:
             hash_digest_with_salt=base64.b64decode(base64.b64decode(p)[6:]).strip()
             salt=hash_digest_with_salt[hashlib.sha1().digest_size:]
             compare=base64.b64encode("{SSHA}" + base64.encodestring(hashlib.sha1(str(pwd) + salt).digest() + salt))
             return p == compare
+        return None
 
     def get_ldap_config(self,*args,**kwargs):
+        release=args[0].lower()
+        root_mode=self.check_root()
+        kw={'stderr':None}
+
+        if root_mode:
+            kw.setdefault('asroot',True)
+        auth="-Y EXTERNAL"
+        uri="ldapi:///"
+
+        if release=='client' and self.pwd:
+            auth="-D cn=admin,dc=ma5,dc=lliurex,dc=net -w "+self.pwd
+            uri="-H ldaps://server:636"
+
         try:
-            db=self.execute(run='ldapsearch -Y EXTERNAL -H ldapi:/// -LLL',stderr=None,asroot=True)
+            db=self.execute(run='ldapsearch {} -H {} -LLL'.format(auth,uri),**kw)
+            tree_db=self.parse_tree(db)
         except:
             db=None
+            tree_db=None
         try:
-            config=self.execute(run='ldapsearch -Y EXTERNAL -H ldapi:/// -b cn=config -LLL',stderr=None, asroot=True)
+            config=self.execute(run='ldapsearch {} -H {} -b cn=config -LLL'.format(auth,uri),**kw)
+            tree_config=self.parse_tree(config)
         except:
             config=None
-        tree_db=self.parse_tree(db)
-        tree_config=self.parse_tree(config)
+            tree_config=None
+
         try:
             tree_db['net']['lliurex']['ma5']['o']
             init_done=True
@@ -152,12 +174,15 @@ class LlxLdap(Detector):
     def run(self,*args,**kwargs):
         out = {'LDAP_MASTER_IP':None}
         output = {}
+
+        self.read_pass()
+
         output['FILES'] = self.check_files()
         output['PORTS'] = self.check_ports()
         mode=None
 
         if output['PORTS']['636']:
-            output['CONFIG']=self.get_ldap_config()
+            output['CONFIG']=self.get_ldap_config(kwargs['LLIUREX_RELEASE'])
             mode='UNKNOWN'
             try:
                 test=output['CONFIG']['INITIALIZED']
