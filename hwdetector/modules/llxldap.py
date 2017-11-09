@@ -188,9 +188,9 @@ class LlxLdap(Detector):
         mapping={'CLIENT_LDAP_URI':'SERVER_LDAP'}
         server=None
         for search_var in mapping:
-            if search_var in n4d_vars and 'value' in n4d_vars[search_var]:
-                output.update({mapping[search_var]:n4d_vars[search_var]['value']})
-                server=n4d_vars[search_var]['value']
+            if search_var in vars and 'value' in vars[search_var]:
+                output.update({mapping[search_var]:vars[search_var]['value']})
+                server=vars[search_var]['value']
         self.read_pass()
 
         output['PORTS'] = self.check_ports()
