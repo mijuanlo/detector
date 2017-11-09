@@ -26,7 +26,7 @@ def initLog(default_min_log=logging.INFO,*args,**kwargs):
         datefmt="%H:%M] [%S",
         stream=sys.stdout
     )
-    if 'color' in kwargs and kwargs['color']:
+    if 'color' in kwargs and kwargs['color'] and logcolor:
         return colorlog.getLogger()
     else:
         return logging.getLogger()
