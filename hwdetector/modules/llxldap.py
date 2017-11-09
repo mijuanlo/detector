@@ -8,23 +8,25 @@ import hashlib
 log.debug("File "+__name__+" loaded")
 
 class LlxLdap(Detector):
-    _NEEDS = ['HELPER_EXECUTE','HELPER_FILE_FIND_LINE','HELPER_UNCOMMENT','HELPER_CHECK_OPEN_PORT','LLIUREX_RELEASE','HELPER_CHECK_ROOT','NETINFO']
-    _PROVIDES = ['LDAP_INFO','LDAP_MODE','LDAP_MASTER_IP']
+    _NEEDS = ['HELPER_EXECUTE','HELPER_FILE_FIND_LINE','HELPER_UNCOMMENT','HELPER_CHECK_OPEN_PORT','LLIUREX_RELEASE','HELPER_CHECK_ROOT','NETINFO','N4D_VARS']
+    _PROVIDES = ['SERVER_LDAP','LDAP_INFO','LDAP_MODE','LDAP_MASTER_IP']
 
     def check_files(self,*args,**kwargs):
         release=args[0]
         mode=args[1].lower()
+        server=args[2]
+
         if mode == 'independent':
-            server = 'server'
+            servername = server
         else:
-            server = 'localhost'
+            servername = 'localhost'
 
         output={}
         content_ldap_conf=self.uncomment("/etc/ldap.conf")
         ldap_conf_ok = self.file_find_line(content_ldap_conf,
         [
             ['^base','dc=ma5,dc=lliurex,dc=net'],
-            ['^uri','ldap://'+server],
+            ['^uri','ldap://'+servername],
             ['^nss_base_group','ou=Groups,dc=ma5,dc=lliurex,dc=net'],
             ['^nss_map_attribute','gecos','description']
         ])
@@ -32,7 +34,7 @@ class LlxLdap(Detector):
         etc_ldap_ldap_conf_ok = self.file_find_line(content_etc_ldap_ldap_conf,
         [
             ['^BASE','dc=ma5,dc=lliurex,dc=net'],
-            ['^URI','ldaps://'+server]
+            ['^URI','ldaps://'+servername]
         ])
         if ldap_conf_ok:
             output['etc_ldap_conf']={'syntax':'OK','content':content_ldap_conf}
@@ -182,6 +184,13 @@ class LlxLdap(Detector):
         out = {'LDAP_MASTER_IP':None}
         output = {}
         release=kwargs['LLIUREX_RELEASE']
+        vars=kwargs['N4D_VARS']
+        mapping={'CLIENT_LDAP_URI':'SERVER_LDAP'}
+        server=None
+        for search_var in mapping:
+            if search_var in n4d_vars and 'value' in n4d_vars[search_var]:
+                output.update({mapping[search_var]:n4d_vars[search_var]['value']})
+                server=n4d_vars[search_var]['value']
         self.read_pass()
 
         output['PORTS'] = self.check_ports()
@@ -216,7 +225,7 @@ class LlxLdap(Detector):
                                 elif ip_alias=='254':
                                     mode='MASTER'
 
-        output['FILES'] = self.check_files(release,mode)
+        output['FILES'] = self.check_files(release,mode,server)
         out.update( {'LDAP_INFO':output,'LDAP_MODE':mode})
 
         return out
