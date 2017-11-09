@@ -209,6 +209,10 @@ class LlxLdap(Detector):
                 server=ip_server
                 if ip_server != ip_server2:
                     log.warning("'server' is not my gateway")
+            if server:
+                output.update('SERVER_LDAP',server)
+            else:
+                output.update('SERVER_LDAP',None)
 
         self.read_pass()
 
