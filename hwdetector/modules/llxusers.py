@@ -103,76 +103,10 @@ class LlxUsers(Detector):
 
         return (ret,msg)
 
-        # if release == 'client':
-        #     if typeuser == 'student':
-        #         if session_type == 'FAT' or session_type == 'SEMI':
-        #             shares = ['home','share','groups_share']
-        #             ret, msgs = check_mount_network(username,shares,mounts_info)
-        #             msg.extend(msgs)
-        #             # for share in ['home','share','groups_share']:
-        #             #     mountpoint='/run/' + username + '/' + share
-        #             #     mountsource='//server/'+share
-        #             #     for x in mounts_info['NETWORK']:
-        #             #         ret = False
-        #             #         if x['mount_point'] ==  mountpoint and x['mount_source'] == mountsource and x['fstype'] == 'cifs':
-        #             #             ret = True
-        #             #             msg.append('Samba share {} mounted under {}'.format(mountsource,mountpoint))
-        #             #             break
-        #             #     if not ret:
-        #             #         msg.append('Samba share {} not mounted under {}'.format(mountsource,mountpoint))
-        #             #         break
-        #             #     else:
-        #             #         ret = True
-        #             if ret:
-        #                 bind_paths={'Desktop':'/run/'+username+'/home/students/'+username+'/Desktop','Documents':'/run/'+username+'/home/students/'+username+'/Documents','share':'/run/'+username+'/share','groups_share':'/run/'+username+'/groups_share'}
-        #                 ret,msgs=check_binds(username,bind_paths,mounts_info)
-        #                 msg.extend(msgs)
-        #                 # for bind in bind_paths:
-        #                 #     for x in mounts_info['BIND']:
-        #                 #         ret = False
-        #                 #         if x['mount_point'].startswith('/home/' + username) and x['mount_source'] == bind_paths[bind]:
-        #                 #             ret = True
-        #                 #             msg.append('Bindmount {} from {} available'.format(x['mount_point'],bind_paths[bind]))
-        #                 #             break
-        #                 #     if not ret:
-        #                 #         msg.append('Bindmount {} from {} not available'.format(bind,bind_paths[bind]))
-        #                 #         break
-        #
-        #         elif session_type == 'THIN':
-        #             pass
-        #     elif typeuser == 'teacher':
-        #         pass
-        #     elif typeuser == 'admin':
-        #         pass
-        # elif release == 'server':
-        #     if typeuser == 'student':
-        #         if session_type == 'FAT' or session_type == 'SEMI':
-        #             bind_paths={'Desktop':'/net/server-sync/home/students/'+username+'/Desktop','Documents':'/net/server-sync/home/students/'+username+'/Documents','share':'/net/server-sync/share','groups_share':'/net/server-sync/groups_share'}
-        #             ret,msgs = check_binds(username,bind_paths,mounts_info)
-        #             # for bind in bind_paths:
-        #             #     for x in mounts_info['BIND']:
-        #             #         ret = False
-        #             #         if x['mount_point'].startswith('/home/' + username) and x['mount_source'] == bind_paths[bind]:
-        #             #             ret = True
-        #             #             msg.append('Bindmount {} from {} available'.format(x['mount_point'],bind_paths[bind]))
-        #             #             break
-        #             #     if not ret:
-        #             #         msg.append('Bindmount {} from {} not available'.format(bind,bind_paths[bind]))
-        #             #         break
-        #
-        #         elif session_type == 'THIN':
-        #             pass
-        #     elif typeuser == 'teacher':
-        #         pass
-        #     elif typeuser == 'admin':
-        #         pass
-        # else: # pyme, infantil, desktop, music
-        #     return (True,['Not in classroom model'])
-        #return (ret,msg)
-
     def run(self,*args,**kwargs):
         output={}
         LDAP_INFO=kwargs['LDAP_INFO']
+        LLIUREX_RELEASE=kwargs['LLIUREX_RELEASE']
         logged_users=self.users_logged()
         myinfo=self.who_i_am()
 

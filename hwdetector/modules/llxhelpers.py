@@ -137,10 +137,11 @@ class LlxHelpers(Detector):
 
     def demote(self,*args,**kwargs):
         try:
-            if os.getuid() != 0:
-                os.setuid(0)
-            if os.getgid() != 0:
-                os.setgid(0)
+            info=pwd.getpwnam('nobody')
+            id=info.pw_uid
+            gid=info.pw_gid
+            os.setuid(id)
+            os.setgid(gid)
         except Exception as e:
             return False
         return True
@@ -194,12 +195,23 @@ class LlxHelpers(Detector):
             if kwargs['nocomment'] == True or kwargs['nocomment'] == 'yes':
                 with_uncomment=True
 
-        if 'asroot' in kwargs:
-            if kwargs['asroot'] == True or kwargs['asroot'] == 'yes':
+        myinfo=pwd.getpwuid(os.geteuid())
+        user = myinfo.pw_name
+        group = grp.getgrgid(myinfo.pw_gid).gr_name
+        root_mode = False
+        if self.check_root():
+            if 'asroot' in kwargs:
+                if kwargs['asroot'] == True or kwargs['asroot'] == 'yes':
+                    root_mode=True
+            if not root_mode:
                 params.setdefault('preexec_fn', self.demote)
+                user = 'nobody'
+                group = 'nogroup'
+
         params.setdefault('shell',shell)
         stdout=None
         stderr=None
+        log.info('Executing command \'{}\' as {}:{}'.format(' '.join(runlist),user,group))
         try:
             start=time.time()
             p=subprocess.Popen(runlist,**params)
