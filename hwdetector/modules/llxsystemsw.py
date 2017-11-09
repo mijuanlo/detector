@@ -12,7 +12,7 @@ class LlxSystemSW(Detector):
 
     def run(self,*args,**kwargs):
         output={}
-        pkg_list=self.execute(run='dpkg -l').strip("\n")
+        pkg_list=self.execute(run='dpkg -l',stderr=None).strip("\n")
 
         dpkg_info={'BYNAME':{},'BYSTATUS':{}}
         regexp=re.compile(r'^(?P<STATUS>\w+)\s+(?P<PACKAGE>[^:\s]+)(:(?P<PACKAGE_ARCHITECTURE>\S+))?\s+(?P<VERSION>\S+)\s+(?P<BUILD_ARCHITECTURE>\S+)\s+(?P<DESCRIPTION>.*)$')
