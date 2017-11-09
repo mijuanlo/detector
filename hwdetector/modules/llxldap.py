@@ -8,13 +8,16 @@ import hashlib
 log.debug("File "+__name__+" loaded")
 
 class LlxLdap(Detector):
-    _NEEDS = ['HELPER_EXECUTE','HELPER_FILE_FIND_LINE','HELPER_UNCOMMENT','HELPER_CHECK_OPEN_PORT','LLIUREX_RELEASE','HELPER_CHECK_ROOT','NETINFO','N4D_VARS']
+    _NEEDS = ['HELPER_EXECUTE','HELPER_FILE_FIND_LINE','HELPER_UNCOMMENT','HELPER_CHECK_OPEN_PORT','LLIUREX_RELEASE','HELPER_CHECK_ROOT','NETINFO','N4D_VARS','HELPER_CHECK_NS']
     _PROVIDES = ['SERVER_LDAP','LDAP_INFO','LDAP_MODE','LDAP_MASTER_IP']
 
     def check_files(self,*args,**kwargs):
         release=args[0]
         mode=args[1].lower()
         server=args[2]
+
+        if not server:
+            log.error('Unable to locate ldap server')
 
         if mode == 'independent':
             servername = server
@@ -61,9 +64,10 @@ class LlxLdap(Detector):
 
     def check_ports(self,*args,**kwargs):
         ports=['389','636']
+        server=args[0]
         out = {}
         for p in ports:
-            out[p]=self.check_open_port('server',p)
+            out[p]=self.check_open_port(server,p)
         try:
             self.file_find_line(self.execute(run='netstat -nx'),'/var/run/slapd/ldapi')
             out['LDAPI']=True
@@ -141,6 +145,7 @@ class LlxLdap(Detector):
 
     def get_ldap_config(self,*args,**kwargs):
         release=args[0].lower()
+        server=args[1]
         root_mode=self.check_root()
         kw={'stderr':None}
 
@@ -151,7 +156,7 @@ class LlxLdap(Detector):
 
         if release=='client' and self.pwd:
             auth="-D cn=admin,dc=ma5,dc=lliurex,dc=net -w "+self.pwd
-            uri="-H ldaps://server:636"
+            uri="-H ldaps://"+server+":636"
 
         try:
             db=self.execute(run='ldapsearch {} -H {} -LLL'.format(auth,uri),**kw)
@@ -191,13 +196,27 @@ class LlxLdap(Detector):
             if search_var in vars and 'value' in vars[search_var]:
                 output.update({mapping[search_var]:vars[search_var]['value']})
                 server=vars[search_var]['value']
+        if not server:
+            ip_server=self.check_ns('server')
+            ip_server2=kwargs['NETINFO']['gw']['via']
+            if not ip_server:
+                log.error("'server' not resolvable")
+                if ip_server2:
+                    server=ip_server2
+                else:
+                    log.error('not detected any gateway')
+            else:
+                server=ip_server
+                if ip_server != ip_server2:
+                    log.warning("'server' is not my gateway")
+
         self.read_pass()
 
-        output['PORTS'] = self.check_ports()
+        output['PORTS'] = self.check_ports(server)
         mode=None
 
         if output['PORTS']['636']:
-            output['CONFIG']=self.get_ldap_config(release)
+            output['CONFIG']=self.get_ldap_config(release,server)
             mode='UNKNOWN'
             try:
                 test=output['CONFIG']['INITIALIZED']
