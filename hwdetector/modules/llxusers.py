@@ -116,10 +116,7 @@ class LlxUsers(Detector):
             admins=[(x,people['Admins'][x]) for x in people['Admins'].keys() if type(people['Admins'][x]) == type(dict())]
             teachers=[(x,people['Teachers'][x]) for x in people['Teachers'].keys() if type(people['Teachers'][x]) == type(dict())]
         except Exception as e:
-            if kwargs['ROOT_MODE'] == False:
-                log.warning("No access to ldap database, running non-root mode")
-            else:
-                log.error('Fail getting needed ldap information')
+            log.warning('Fail getting needed ldap information, using fake information only for current user')
             people = None # NO LDAP ACCESS DO IT ONLY FOR ME
             fake_ldap_info=(myinfo['name'],{'homeDirectory':[myinfo['user_info'][5]],'uid':[myinfo['name']]})
             users=[]
