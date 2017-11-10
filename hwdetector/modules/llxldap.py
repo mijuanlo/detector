@@ -194,7 +194,7 @@ class LlxLdap(Detector):
         server=None
         for search_var in mapping:
             if search_var in vars and 'value' in vars[search_var]:
-                output.update({mapping[search_var]:vars[search_var]['value']})
+                out.update({mapping[search_var]:vars[search_var]['value']})
                 server=vars[search_var]['value']
         if not server:
             ip_server=self.check_ns('server')
@@ -210,9 +210,9 @@ class LlxLdap(Detector):
                 if ip_server != ip_server2:
                     log.warning("'server' is not my gateway")
             if server:
-                output.update({'SERVER_LDAP':server})
+                out.update({'SERVER_LDAP':server})
             else:
-                output.update({'SERVER_LDAP':None})
+                out.update({'SERVER_LDAP':None})
 
         self.read_pass()
 
