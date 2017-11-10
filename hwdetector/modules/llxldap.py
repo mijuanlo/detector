@@ -13,13 +13,13 @@ class LlxLdap(Detector):
 
     def check_files(self,*args,**kwargs):
         release=args[0]
-        mode=args[1].lower()
+        mode=args[1]
         server=args[2]
 
         if not server:
             log.error('Unable to locate ldap server')
 
-        if mode == 'independent':
+        if mode and mode.lower() == 'independent':
             servername = server
         else:
             servername = 'localhost'

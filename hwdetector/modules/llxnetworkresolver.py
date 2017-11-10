@@ -32,10 +32,10 @@ class LlxNetworkResolver(Detector):
 
         if go_to_ping:
             if self.check_ping(ip):
-                self.output['REACHABLE'].append(ip)
+                self.output['REACHABLE'].append('{} ({})'.format(ip,ns))
                 ret=True
             else:
-                self.output['UNREACHABLE'].append(ip)
+                self.output['UNREACHABLE'].append('{} ({})'.format(ip,ns))
 
         return ret
 
