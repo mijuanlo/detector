@@ -156,7 +156,7 @@ class LlxLdap(Detector):
 
         if release=='client' and self.pwd:
             auth="-D cn=admin,dc=ma5,dc=lliurex,dc=net -w "+self.pwd
-            uri="-H ldaps://"+server+":636"
+            uri="ldaps://"+server+":636"
 
         try:
             db=self.execute(run='ldapsearch {} -H {} -LLL'.format(auth,uri),**kw)
