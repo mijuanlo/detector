@@ -26,7 +26,9 @@ class LlxNetHelpers(Detector):
                 return False
         else:
             host=str(args[0])
-            m = re.search(r'^\d+\.\d+\.\d+\.\d+$',host)
+            #split protocol if there is something
+            host=re.findall(r'(?:[^/]+/+)?(.*)$',host)[0]
+            m = re.search(r'^(\d+(?:\.\d+){3})$',host)
             if not m:
                 if not self.check_ns(host):
                     return False

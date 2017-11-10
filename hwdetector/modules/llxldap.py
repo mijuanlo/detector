@@ -4,12 +4,13 @@ import utils.log as log
 import re
 import base64
 import hashlib
+import os
 
 log.debug("File "+__name__+" loaded")
 
 class LlxLdap(Detector):
     _NEEDS = ['HELPER_EXECUTE','HELPER_FILE_FIND_LINE','HELPER_UNCOMMENT','HELPER_CHECK_OPEN_PORT','LLIUREX_RELEASE','HELPER_CHECK_ROOT','NETINFO','N4D_VARS','HELPER_CHECK_NS']
-    _PROVIDES = ['SERVER_LDAP','LDAP_INFO','LDAP_MODE','LDAP_MASTER_IP']
+    _PROVIDES = ['SERVER_LDAP','LDAP_INFO','LDAP_MODE','LDAP_MASTER_IP','LOCAL_LDAP']
 
     def check_files(self,*args,**kwargs):
         release=args[0]
@@ -65,6 +66,14 @@ class LlxLdap(Detector):
     def check_ports(self,*args,**kwargs):
         ports=['389','636']
         server=args[0]
+        localldap=args[1]
+        # split uri
+        #server=re.findall(r'(?:[^/]+/+)?(.*)$',server)[0]
+        #if not localldap:
+        #    # is dnsname?
+        #    is_ip=re.findall(r'(\d+(?:\.\d+){3})',server)[0]
+        #    if is_ip:
+        #        server=is_ip[0]
         out = {}
         for p in ports:
             out[p]=self.check_open_port(server,p)
@@ -128,10 +137,16 @@ class LlxLdap(Detector):
 
     def read_pass(self):
         self.pwd=None
+        sfile='/etc/ldap.secret'
         try:
-            with open('/etc/ldap.secret','r') as f:
-                self.pwd=f.read().strip()
+            if not os.path.exists(sfile):
+                sfile=None
+            else:
+                with open(sfile,'r') as f:
+                    self.pwd=f.read().strip()
         except:
+            if sfile:
+                log.warning('Running as user, secret file verification is not possible')
             pass
 
     def checkpass(self,*args,**kwargs):
@@ -192,10 +207,15 @@ class LlxLdap(Detector):
         vars=kwargs['N4D_VARS']
         mapping={'CLIENT_LDAP_URI':'SERVER_LDAP'}
         server=None
+        localldap=None
+
+        # Guess server ldap uri
         for search_var in mapping:
             if search_var in vars and 'value' in vars[search_var]:
                 out.update({mapping[search_var]:vars[search_var]['value']})
                 server=vars[search_var]['value']
+                out.setdefault('LOCAL_LDAP',True)
+                localldap=True
         if not server:
             ip_server=self.check_ns('server')
             ip_server2=kwargs['NETINFO']['gw']['via']
@@ -211,12 +231,16 @@ class LlxLdap(Detector):
                     log.warning("'server' is not my gateway")
             if server:
                 out.update({'SERVER_LDAP':server})
+                out.update({'LOCAL_LDAP':False})
+                localldap=False
             else:
                 out.update({'SERVER_LDAP':None})
+                out.update({'LOCAL_LDAP':None})
+                localldap=None
 
         self.read_pass()
 
-        output['PORTS'] = self.check_ports(server)
+        output['PORTS'] = self.check_ports(server,localldap)
         mode=None
 
         if output['PORTS']['636']:
@@ -234,7 +258,7 @@ class LlxLdap(Detector):
                     m=re.search(r'provider=ldapi?://(?P<LDAP_MASTER_IP>\d+\.\d+\.\d+\.\d+)',output['CONFIG']['CONFIG']['config']['{1}mdb']['olcSyncrepl'][0])
                     if m:
                         out.update(m.groupdict())
-            except:# indep or master(running without permissions)
+            except:# indep or (master/slave(running without permissions))
                 mode='INDEPENDENT'
                 netinfo=kwargs['NETINFO']
                 if netinfo:
