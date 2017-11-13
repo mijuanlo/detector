@@ -31,14 +31,14 @@ def indent_var(st=u'',var={},indent=0):
                 st += u'{}{}\n{}{}'.format(indentation,x,indent_var(var=var[x],indent=indent+1),creturn)
         elif type(var) == type(list()):
             if len(var) == 2 and var[0] == '__gz__':
-                decoded = base64.b64decode(var[1])
-                content=zlib.decompress(decoded)
-                st += u'{}{}'.format(indentation,content.encode('utf-8'))
+                content=zlib.decompress(base64.b64decode(var[1])).encode('utf-8')
+                replaced = content.replace(u'\n',indentation+u'\n'+indentation)
+                st += u'{}{}'.format(indentation,replaced)
             else:
                 for x in sorted(var):
                     st += u'{}{}'.format(indentation,indent_var(var=x,indent=indent+1))
         elif type(var) == type(str()):
-            var = var.decode('unicode-escape')
+            var = var.encode('utf-8')
             replaced = var.replace(u'\n',indentation+u'\n'+indentation)
             st += u'{}{}'.format(indentation,replaced)
         elif type(var) == type(unicode()):
@@ -145,9 +145,10 @@ def run_analysis(*args,**kwargs):
     fileinfo=load_file(*args,**kwargs)
     if fileinfo:
         fileinfo = json.loads(fileinfo)
-        pr=indent_var(var=fileinfo)
-        sys.stdout.write(pr.encode('utf-8'))
-        sys.stderr.write('\n')
+        if kwargs.get('to_stdout'):
+            pr=indent_var(var=fileinfo)
+            sys.stdout.write(pr.encode('utf-8'))
+            sys.stderr.write('\n')
         return True
 
 if __name__ == '__main__':
