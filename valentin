@@ -42,7 +42,7 @@ def indent_var(st=u'',var={},indent=0):
             replaced = var.replace(u'\n',indentation+u'\n'+indentation)
             st += u'{}{}'.format(indentation,replaced)
         elif type(var) == type(unicode()):
-            replaced = var.replace(u'\n',indentation+u'\n')
+            replaced = var.replace(u'\n',indentation+u'\n'+indentation)
             st += u'{}{}'.format(indentation,replaced)
         elif type(var) == type(bool()) or type(var) == type(int()) or type(var) == type(float()) or type(var) == type(tuple()) or var == None:
             st += u'{}{}'.format(indentation,var)
