@@ -48,7 +48,7 @@ class LlxSystemInfo(Detector):
             for file in file_names:
                 try:
                     with open(file,'r') as f:
-                        varlog[os.path.basename(file)]=base64.b64encode(zlib.compress(f.read().strip()))
+                        varlog[os.path.basename(file)]=('__gz__',base64.b64encode(zlib.compress(f.read().strip())))
                 except Exception as e:
                     pass
         except Exception as e:

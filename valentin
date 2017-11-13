@@ -8,6 +8,8 @@ import datetime
 import tempfile
 import json
 import argparse
+import zlib
+import base64
 
 def run_in_debug():
     gettrace=getattr(sys,'gettrace',None)
@@ -28,8 +30,13 @@ def indent_var(st=u'',var={},indent=0):
             for x in sorted(var.keys()):
                 st += u'{}{}\n{}{}'.format(indentation,x,indent_var(var=var[x],indent=indent+1),creturn)
         elif type(var) == type(list()):
-            for x in sorted(var):
-                st += u'{}{}'.format(indentation,indent_var(var=x,indent=indent+1))
+            if len(var) == 2 and var[0] == '__gz__':
+                decoded = base64.b64decode(var[1])
+                content=zlib.decompress(decoded)
+                st += u'{}{}'.format(indentation,content.decode('unicode-escape'))
+            else:
+                for x in sorted(var):
+                    st += u'{}{}'.format(indentation,indent_var(var=x,indent=indent+1))
         elif type(var) == type(str()):
             var = var.decode('unicode-escape')
             replaced = var.replace(u'\n',indentation+u'\n'+indentation)
@@ -69,6 +76,9 @@ def make_tar(file,*args,**kwargs):
         if os.path.exists(file):
             with tarfile.open(filename,'w:gz') as f:
                 f.add(file,arcname='debug-info-{}.txt'.format(datestr),recursive=False)
+                logger_message_file='debug-log-messages.txt'
+                if os.path.exists(logger_message_file):
+                    f.add(logger_message_file,arcname=logger_message_file)
             return filename
     except Exception as e:
         return False
@@ -135,7 +145,8 @@ def run_analysis(*args,**kwargs):
     fileinfo=load_file(*args,**kwargs)
     if fileinfo:
         fileinfo = json.loads(fileinfo)
-    pass
+        pr=indent_var(var=fileinfo)
+        print pr
 
 if __name__ == '__main__':
     try:
