@@ -12,7 +12,7 @@
     <option name="ADD_SOURCE_ROOTS" value="true" />
     <module name="detector" />
     <option name="SCRIPT_NAME" value="$PROJECT_DIR$/valentin" />
-    <option name="PARAMETERS" value="-cd info" />
+    <option name="PARAMETERS" value="-cd info -a valentin-info-201711131654.tar.gz" />
     <option name="SHOW_COMMAND_LINE" value="false" />
     <option name="EMULATE_TERMINAL" value="false" />
     <method />

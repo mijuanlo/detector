@@ -106,7 +106,35 @@ def run_detection(*args,**kwargs):
 
     return ret
 
+def load_file(*args,**kwargs):
+    if 'analyze_file' in kwargs:
+        filename = kwargs['analyze_file'][0]
+    else:
+        return False
+    if os.path.exists(filename):
+        ftxt=None
+        if tarfile.is_tarfile(filename):
+            with tarfile.open(filename,'r:gz') as tar:
+                target_file=None
+
+                for tarinfo in tar.getmembers():
+                    if 'debug-info' in tarinfo.name.lower():
+                        target_file=tarinfo.name
+                        break
+                if target_file:
+                    ftxt = tar.extractfile(target_file).read()
+        else:
+            ftxt = None
+            with open(filename,'r') as f:
+                ftxt = f.read()
+        return ftxt
+    else:
+        return False
+
 def run_analysis(*args,**kwargs):
+    fileinfo=load_file(*args,**kwargs)
+    if fileinfo:
+        fileinfo = json.loads(fileinfo)
     pass
 
 if __name__ == '__main__':

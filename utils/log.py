@@ -43,6 +43,9 @@ class logger(logging.getLoggerClass()):
                 stream=sys.stderr
             )
             self.l = logging.getLogger()
+        fh=logging.FileHandler('debug-log-messages.txt',mode='w')
+        fh.setFormatter(self.l.handlers[0].formatter)
+        self.l.addHandler(fh)
 
         return self
 
