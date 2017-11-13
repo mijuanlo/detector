@@ -35,22 +35,22 @@ class HwDetector:
         self.nproc=0
         self.nproc_started=0
 
-    def _close_stderr(self):
-        try:
-            self.errfile=os.fdopen(2,'w',0)
-            sys.stderr.close()
-            sys.stderr = open(os.devnull, 'w')
-        except:
-            pass
-
-
-    def _open_stderr(self):
-        try:
-            sys.stderr.flush()
-            sys.stderr.close()
-            sys.stderr = self.errfile
-        except:
-            pass
+    # def _close_stderr(self):
+    #     try:
+    #         self.errfile=os.fdopen(2,'w',0)
+    #         sys.stderr.close()
+    #         sys.stderr = open(os.devnull, 'w')
+    #     except:
+    #         pass
+    #
+    #
+    # def _open_stderr(self):
+    #     try:
+    #         sys.stderr.flush()
+    #         sys.stderr.close()
+    #         sys.stderr = self.errfile
+    #     except:
+    #         pass
 
 
     def _kill_proc(self,*args,**kwargs):
@@ -364,7 +364,8 @@ class HwDetector:
 
                     if can_start:
                         pipe_in, pipe_out = Pipe(duplex=False)
-                        kw = {'out': pipe_out,'stderr':open(os.devnull,'w')}
+                        #kw = {'out': pipe_out,'stderr':open(os.devnull,'w')}
+                        kw = {'out': pipe_out}
                         args = (pipe_out,)
                         obj = self.pm.classes[plug]()
 

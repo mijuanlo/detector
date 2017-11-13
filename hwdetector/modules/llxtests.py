@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import hwdetector.Detector as Detector
 import utils.log as log
+import sys
 
 log.debug("File "+__name__+" loaded")
 
@@ -12,9 +13,9 @@ class LlxAlltests(Detector):
         ret=True
         for test in self._NEEDS:
             if kwargs[test]['status']:
-                print "{}>>>Testing {} was OK!\n".format(kwargs[test]['msg'],test)
+                sys.stderr.write("{}>>>Testing {} was OK!\n".format(kwargs[test]['msg'],test))
             else:
-                print "{}>>>Testing {} was Failed!\n".format(kwargs[test]['msg'],test)
+                sys.stderr.write("{}>>>Testing {} was Failed!\n".format(kwargs[test]['msg'],test))
                 ret=False
         output={'ALL_TESTS':ret}
         return output
