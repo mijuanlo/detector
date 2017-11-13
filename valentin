@@ -7,6 +7,7 @@ import tarfile
 import datetime
 import tempfile
 import json
+import argparse
 
 def run_in_debug():
     gettrace=getattr(sys,'gettrace',None)
@@ -44,65 +45,113 @@ def indent_var(st=u'',var={},indent=0):
     except Exception as e:
         return u''
 
-def make_file(capabilities):
+def make_file(capabilities,*args,**kwargs):
     try:
         #txt = indent_var(var=capabilities)
         txt = json.dumps(capabilities,indent=4,separators=(',',':'),sort_keys=True)
-        name = tempfile.mkstemp()[1]
-        with open(name,'w') as f:
-            f.write(txt.encode('utf-8'))
-        return name
-    except Exception as e:
-        return False
-
-def make_tar(file):
-    try:
-        if os.path.exists(file):
-            name = 'valentin-info-{:%Y%m%d%H%M}.tar.gz'.format(datetime.datetime.now())
-            with tarfile.open(name,'w:gz') as f:
-                f.add(file,arcname='debug-info.txt',recursive=False)
+        if not kwargs['to_stdout']:
+            name = tempfile.mkstemp()[1]
+            with open(name,'w') as f:
+                f.write(txt.encode('utf-8'))
             return name
+        return txt
     except Exception as e:
         return False
 
+def make_tar(file,*args,**kwargs):
+    try:
+        datestr='{:%Y%m%d%H%M}'.format(datetime.datetime.now())
+        if kwargs['fname']:
+            filename = kwargs['fname']
+        else:
+            filename = 'valentin-info-{}.tar.gz'.format(datestr)
 
-try:
-    log.level = logging.DEBUG
-    #log.level = logging.INFO
-    log.level = logging.WARNING
-    #log.level = logging.ERROR
+        if os.path.exists(file):
+            with tarfile.open(filename,'w:gz') as f:
+                f.add(file,arcname='debug-info-{}.txt'.format(datestr),recursive=False)
+            return filename
+    except Exception as e:
+        return False
+
+def run_detection(*args,**kwargs):
     log.debug("Importing hwdetector")
     import hwdetector
 
     log.debug("Instantiate HwDetector")
     hwd=hwdetector.HwDetector()
+
     #hwd.all_plugins_are_needed=True
     if not run_in_debug():
-        print 'USING MAX_RUNNING_TIME !!!'
+        log.info('USING MAX_RUNNING_TIME !!!')
         hwd.MAX_RUNNING_TIME = 5
+
     #hwd.fake_capabilities={'IAMGOD':'yes'}
+
     log.debug("Calling run plugins")
     #ret = hwd.run(needs=['ALL_TESTS'])
     #ret = hwd.run(needs=['LLXSYSTEM_TEST','LLXNETWORK_TEST'])
     ret = hwd.run()
-    #print('\nCapabilities stored (with values)\n')
-    #hwd.printCapabilities()
-    #print('\nCapabilities stored({}) = {}\n'.format(len(hwd.capabilities_stored),','.join(hwd.capabilities_stored)))
+
     try:
-        make_tar(make_file(hwd.capabilities))
-        print "File created"
+        file = make_file(hwd.capabilities,**kwargs)
+        if kwargs['to_stdout']:
+            print(file)
+        else:
+            fname=make_tar(file,**kwargs)
+            log.info("File {} created".format(fname))
     except Exception as e:
-        print "File creation unsuccessful "+str(e)
-    print("Total running time: {}".format(hwd.RUNNING_TIME))
-    if ret:
-        print "Exit code = 0"
-        sys.exit(0)
-    else:
-        print "Exit code = 1"
-        sys.exit(1)
-except Exception as e:
-    print("Exception occurred: {}".format(e))
-    print "Exit code = 1"
-    sys.exit(1)
+        log.error("File creation unsuccessful "+str(e))
+
+    log.info("Total running time: {}".format(hwd.RUNNING_TIME))
+
+    return ret
+
+def run_analysis(*args,**kwargs):
     pass
+
+if __name__ == '__main__':
+    try:
+        parser = argparse.ArgumentParser(description='Simple system diagnostic tool')
+        dlevels = ['debug','info','warning','error']
+        parser.add_argument('-d','--debug-level',metavar='[debug|info|warning|error]',nargs='?',choices=dlevels,help='Set the debug level (default: warning)')
+        parser.add_argument('-c','--coloured',action='store_const',help='Colorize logger messages',const=True)
+        parser.add_argument('-f','--with-file',metavar='filename',nargs='?',help='Filename for results file (default valentin-info-(date).tar.gz')
+        parser.add_argument('-o','--to-stdout',action='store_const',help='Output results to stdout',const=True)
+        parser.add_argument('-a','--analyze-file',metavar='filename',nargs=1,help='Filename to analyze')
+        args = parser.parse_args()
+
+        if not args.debug_level:
+            log.level = logging.WARNING
+        else:
+            levels={'debug':logging.DEBUG,'info':logging.INFO,'warning':logging.WARNING,'error':logging.ERROR}
+            log.set_level(levels[args.debug_level.lower()])
+
+        if args.coloured:
+            log.initLog(color=True)
+
+        fname=None
+        if args.with_file:
+            fname=args.with_file
+            if '.' not in fname:
+                fname = fname + '.tar.gz'
+
+        kw=vars(args)
+        kw.update({'fname':fname})
+
+        if args.analyze_file:
+            ret=run_analysis(**vars(args))
+        else:
+            ret=run_detection(**vars(args))
+
+        if ret:
+            log.info("Exit code = 0")
+            sys.exit(0)
+        else:
+            log.info("Exit code = 1")
+            sys.exit(1)
+
+    except Exception as e:
+        log.error("Exception occurred: {}".format(e))
+        log.error("Exit code = 1")
+        sys.exit(1)
 
