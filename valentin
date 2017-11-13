@@ -3,6 +3,10 @@ import sys,os
 sys.path.insert(0,'.')
 import logging
 import utils.log as log
+import tarfile
+import datetime
+import tempfile
+import json
 
 def run_in_debug():
     gettrace=getattr(sys,'gettrace',None)
@@ -12,6 +16,56 @@ def run_in_debug():
         return True
     else:
         return None
+
+def indent_var(st=u'',var={},indent=0):
+    creturn=u'\n'
+    if indent==0:
+        creturn=creturn*2
+    indentation=u'\t'*indent
+    try:
+        if type(var) == type(dict()):
+            for x in sorted(var.keys()):
+                st += u'{}{}\n{}{}'.format(indentation,x,indent_var(var=var[x],indent=indent+1),creturn)
+        elif type(var) == type(list()):
+            for x in sorted(var):
+                st += u'{}{}'.format(indentation,indent_var(var=x,indent=indent+1))
+        elif type(var) == type(str()):
+            var = var.decode('unicode-escape')
+            replaced = var.replace(u'\n',indentation+u'\n'+indentation)
+            st += u'{}{}'.format(indentation,replaced)
+        elif type(var) == type(unicode()):
+            replaced = var.replace(u'\n',indentation+u'\n')
+            st += u'{}{}'.format(indentation,replaced)
+        elif type(var) == type(bool()) or type(var) == type(int()) or type(var) == type(float()) or type(var) == type(tuple()) or var == None:
+            st += u'{}{}'.format(indentation,var)
+        else:
+            raise Exception('Unknown type var')
+        return st
+    except Exception as e:
+        return u''
+
+def make_file(capabilities):
+    try:
+        #txt = indent_var(var=capabilities)
+        txt = json.dumps(capabilities,indent=4,separators=(',',':'),sort_keys=True)
+        name = tempfile.mkstemp()[1]
+        with open(name,'w') as f:
+            f.write(txt.encode('utf-8'))
+        return name
+    except Exception as e:
+        return False
+
+def make_tar(file):
+    try:
+        if os.path.exists(file):
+            name = 'valentin-info-{:%Y%m%d%H%M}.tar.gz'.format(datetime.datetime.now())
+            with tarfile.open(name,'w:gz') as f:
+                f.add(file,arcname='debug-info.txt',recursive=False)
+            return name
+    except Exception as e:
+        return False
+
+
 try:
     log.level = logging.DEBUG
     #log.level = logging.INFO
@@ -34,6 +88,11 @@ try:
     #print('\nCapabilities stored (with values)\n')
     #hwd.printCapabilities()
     #print('\nCapabilities stored({}) = {}\n'.format(len(hwd.capabilities_stored),','.join(hwd.capabilities_stored)))
+    try:
+        make_tar(make_file(hwd.capabilities))
+        print "File created"
+    except Exception as e:
+        print "File creation unsuccessful "+str(e)
     print("Total running time: {}".format(hwd.RUNNING_TIME))
     if ret:
         print "Exit code = 0"

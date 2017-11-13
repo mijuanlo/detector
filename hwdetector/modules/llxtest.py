@@ -62,8 +62,8 @@ class LlxTest(Detector):
         #return {'TEST':netinfo['LO'],'HELPER_ECHO': {'code':e,'glob':globals()}}
         #t=CTest(5)
         #return {'TEST':  t}
-        t=DetectorObject()
-        setattr(t,'attrib',range(10))
+        ####t=DetectorObject()
+        ####setattr(t,'attrib',range(10))
         #t.attrib=range(10)
-        t.to_string = toString2
-        return {'TEST':t}
+        ####t.to_string = toString2
+        return {'TEST':''}

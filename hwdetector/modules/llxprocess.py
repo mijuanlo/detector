@@ -5,16 +5,39 @@ import re
 
 log.debug("File "+__name__+" loaded")
 
-class Object(object):
-    def search(self,*args,**kwargs):
-        f=lambda n: [ x for x in self.output if n in x['FULL_CMD']]
+# class Object(object):
+#     def search(self,*args,**kwargs):
+#         f=lambda n: [ x for x in self.output if n in x['FULL_CMD']]
+#         l=[]
+#         for x in args:
+#             if type(x) == type(list()):
+#                 l.extend(x)
+#             else:
+#                 l.extend([x])
+#
+#         ret={}
+#         for i in l:
+#             list_proc_matched=f(i)
+#             if list_proc_matched:
+#                 ret[i]=list_proc_matched
+#             else:
+#                 ret[i]=None
+#         return ret
+
+class LlxProcess(Detector):
+
+    _PROVIDES = ['PROCESS_INFO','HELPER_SEARCH_PROCESS']
+    _NEEDS = ['HELPER_EXECUTE']
+
+    def search_process(self,*args,**kwargs):
+        plist=args[0]
+        f=lambda n: [ x for x in plist if n in x['FULL_CMD']]
         l=[]
-        for x in args:
+        for x in args[1:]:
             if type(x) == type(list()):
                 l.extend(x)
             else:
                 l.extend([x])
-
         ret={}
         for i in l:
             list_proc_matched=f(i)
@@ -23,11 +46,6 @@ class Object(object):
             else:
                 ret[i]=None
         return ret
-
-class LlxProcess(Detector):
-
-    _PROVIDES = ['PROCESS_INFO']
-    _NEEDS = ['HELPER_EXECUTE']
 
     def run(self,*args,**kwargs):
         output=[]
@@ -39,7 +57,7 @@ class LlxProcess(Detector):
             if m:
                 output.append(m.groupdict())
 
-        o=Object()
-        o.output=output
+        #o=Object()
+        #o.output=output
 
-        return {'PROCESS_INFO': o}
+        return {'PROCESS_INFO': output, 'HELPER_SEARCH_PROCESS': {'code':self.search_process,'glob':globals()}}

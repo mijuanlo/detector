@@ -5,7 +5,7 @@ import utils.log as log
 log.debug("File "+__name__+" loaded")
 
 class LlxSystemTest(Detector):
-    _NEEDS=['LLIUREX_RELEASE','SYSTEMCTL_INFO','DPKG_INFO','APACHE_INFO','EPOPTES_INFO','DNSMASQ_INFO','SQUID_INFO','PROCESS_INFO','VARLOG_INFO']
+    _NEEDS=['LLIUREX_RELEASE','SYSTEMCTL_INFO','DPKG_INFO','APACHE_INFO','EPOPTES_INFO','DNSMASQ_INFO','SQUID_INFO','PROCESS_INFO','VARLOG_INFO','HELPER_SEARCH_PROCESS']
     _PROVIDES=['LLXSYSTEM_TEST']
 
     def make_result(self,*args,**kwargs):
@@ -42,7 +42,7 @@ class LlxSystemTest(Detector):
         for need in needed_services:
             if need in systemctl['BYUNIT'] and systemctl['BYUNIT'][need][0]['SUB'] == 'running':
                 res_ok.append('Service {}'.format(need))
-                plist=ps.search(needed_services[need])
+                plist=self.search_process(needed_services[need])
                 for x in plist:
                     res_ok.append('{} Process matching \'{}\''.format(len(plist[x]),x))
             else:
