@@ -4,7 +4,7 @@ import importlib
 import inspect
 import utils.log as log
 
-log.debug("File "+__name__+" loaded")
+#log.debug("File "+__name__+" loaded")
 
 def load_module(module_path, filename):
     """ returns the module if filename is a module else None """

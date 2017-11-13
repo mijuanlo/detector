@@ -9,37 +9,38 @@ except:
 class logger(logging.getLoggerClass()):
     def __init__(self,*args,**kwargs):
         self.l = None
+        self.color = False
+        self.level = logging.INFO
         super(logger,self).__init__(*args,**kwargs)
 
-    def initLog(self,default_min_log=logging.INFO,*args,**kwargs):
+    def initLog(self,*args,**kwargs):
         if self.l:
             self.l.handlers = []
-        if 'color' in kwargs and kwargs['color']:
+        if self.color:
             try:
                 colorlog.basicConfig(
-                    level=default_min_log,
+                    level=self.level,
                     #format="[%(asctime)s] %(levelname)s [%(filename)s.%(funcName)s:%(lineno)d] %(message)s",
                     format="%(log_color)s[%(asctime)s:%(msecs)d] %(levelname)s [%(filename)s:%(lineno)d] [%(processName)s] %(message)s %(reset)s",
                     datefmt="%H:%M] [%S",
-                    stream=sys.stdout
+                    stream=sys.stderr
                 )
             except:
-                self.color=False
                 logging.basicConfig(
-                    level=default_min_log,
+                    level=self.level,
                     #format="[%(asctime)s] %(levelname)s [%(filename)s.%(funcName)s:%(lineno)d] %(message)s",
                     format="[%(asctime)s:%(msecs)d] %(levelname)s [%(filename)s:%(lineno)d] [%(processName)s] %(message)s",
                     datefmt="%H:%M] [%S",
-                    stream=sys.stdout
+                    stream=sys.stderr
                 )
             self.l = colorlog.getLogger()
         else:
             logging.basicConfig(
-                level=default_min_log,
+                level=self.level,
                 #format="[%(asctime)s] %(levelname)s [%(filename)s.%(funcName)s:%(lineno)d] %(message)s",
                 format="[%(asctime)s:%(msecs)d] %(levelname)s [%(filename)s:%(lineno)d] [%(processName)s] %(message)s",
                 datefmt="%H:%M] [%S",
-                stream=sys.stdout
+                stream=sys.stderr
             )
             self.l = logging.getLogger()
 
@@ -54,9 +55,13 @@ class logger(logging.getLoggerClass()):
     def info(self,*args,**kwargs):
         self.l.info(*args,**kwargs)
     def set_level(self,*args,**kwargs):
-        self.l.level=args[0]
+        self.level=args[0]
+        self.initLog()
+    def set_color(self,*args,**kwargs):
+        self.color=args[0]
+        self.initLog()
 
 
 log=logger('main')
-log.initLog(color=False)
-log.debug("File log.py loaded")
+log.initLog()
+#log.debug("File log.py loaded")

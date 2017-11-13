@@ -113,7 +113,7 @@ if __name__ == '__main__':
     try:
         parser = argparse.ArgumentParser(description='Simple system diagnostic tool')
         dlevels = ['debug','info','warning','error']
-        parser.add_argument('-d','--debug-level',metavar='[debug|info|warning|error]',nargs='?',choices=dlevels,help='Set the debug level (default: warning)')
+        parser.add_argument('-d','--debug-level',metavar='debug|info|warning|error',nargs='?',choices=dlevels,help='Set the debug level (default: warning)')
         parser.add_argument('-c','--coloured',action='store_const',help='Colorize logger messages',const=True)
         parser.add_argument('-f','--with-file',metavar='filename',nargs='?',help='Filename for results file (default valentin-info-(date).tar.gz')
         parser.add_argument('-o','--to-stdout',action='store_const',help='Output results to stdout',const=True)
@@ -121,13 +121,13 @@ if __name__ == '__main__':
         args = parser.parse_args()
 
         if not args.debug_level:
-            log.level = logging.WARNING
+            log.set_level(logging.WARNING)
         else:
             levels={'debug':logging.DEBUG,'info':logging.INFO,'warning':logging.WARNING,'error':logging.ERROR}
             log.set_level(levels[args.debug_level.lower()])
 
         if args.coloured:
-            log.initLog(color=True)
+            log.set_color(True)
 
         fname=None
         if args.with_file:
