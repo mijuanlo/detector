@@ -33,7 +33,7 @@ def indent_var(st=u'',var={},indent=0):
             if len(var) == 2 and var[0] == '__gz__':
                 decoded = base64.b64decode(var[1])
                 content=zlib.decompress(decoded)
-                st += u'{}{}'.format(indentation,content.decode('unicode-escape'))
+                st += u'{}{}'.format(indentation,content.encode('utf-8'))
             else:
                 for x in sorted(var):
                     st += u'{}{}'.format(indentation,indent_var(var=x,indent=indent+1))
@@ -146,7 +146,9 @@ def run_analysis(*args,**kwargs):
     if fileinfo:
         fileinfo = json.loads(fileinfo)
         pr=indent_var(var=fileinfo)
-        print pr
+        sys.stdout.write(pr.encode('utf-8'))
+        sys.stderr.write('\n')
+        return True
 
 if __name__ == '__main__':
     try:
