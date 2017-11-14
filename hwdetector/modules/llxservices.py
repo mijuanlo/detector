@@ -100,8 +100,7 @@ class LlxServices(Detector):
                 logfile = None
                 file='/var/log/epoptes.log'
                 if os.path.exists(file):
-                    with open(file,'r') as f:
-                        logfile = self.compress_file(file)
+                    logfile = self.compress_file(file=file)
                 epoptes_info={'logfile':logfile,'PORT_USED':port_in_use}
 
         output.update({'EPOPTES_INFO':epoptes_info})

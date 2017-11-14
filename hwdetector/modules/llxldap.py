@@ -9,7 +9,7 @@ import os
 log.debug("File "+__name__+" loaded")
 
 class LlxLdap(Detector):
-    _NEEDS = ['HELPER_EXECUTE','HELPER_FILE_FIND_LINE','HELPER_UNCOMMENT','HELPER_CHECK_OPEN_PORT','LLIUREX_RELEASE','HELPER_CHECK_ROOT','NETINFO','N4D_VARS','HELPER_CHECK_NS']
+    _NEEDS = ['HELPER_EXECUTE','HELPER_FILE_FIND_LINE','HELPER_UNCOMMENT','HELPER_CHECK_OPEN_PORT','LLIUREX_RELEASE','HELPER_CHECK_ROOT','NETINFO','N4D_VARS','HELPER_CHECK_NS','HELPER_COMPRESS_FILE']
     _PROVIDES = ['SERVER_LDAP','LDAP_INFO','LDAP_MODE','LDAP_MASTER_IP','LOCAL_LDAP']
 
     def check_files(self,*args,**kwargs):
@@ -66,7 +66,7 @@ class LlxLdap(Detector):
     def check_ports(self,*args,**kwargs):
         ports=['389','636']
         server=args[0]
-        localldap=args[1]
+        #localldap=args[1]
         # split uri
         #server=re.findall(r'(?:[^/]+/+)?(.*)$',server)[0]
         #if not localldap:
@@ -198,7 +198,7 @@ class LlxLdap(Detector):
                 good_pass=self.checkpass(tree_config['config']['{1}mdb']['olcRootPW:'][0])
         else:
             good_pass=None
-        return {'CONFIG':tree_config,'DB':tree_db,'INITIALIZED':init_done,'SECRET_STATUS':good_pass}
+        return {'CONFIG':tree_config,'DB':tree_db,'RAW_CONFIG':self.compress_file(string=config),'RAW_DB':self.compress_file(string=db),'INITIALIZED':init_done,'SECRET_STATUS':good_pass}
 
     def run(self,*args,**kwargs):
         out = {'LDAP_MASTER_IP':None}

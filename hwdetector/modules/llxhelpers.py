@@ -255,12 +255,23 @@ class LlxHelpers(Detector):
             return None
     def compress_file(self,*args,**kwargs):
         file=kwargs.get('file')
-        if file and os.path.exists(file):
+        string=kwargs.get('string')
+        if not file and not string:
+            log.error('Compressing called without \'file\' or \'string\' keyparam')
+        if file:
+            if os.path.exists(file):
+                try:
+                    with open(file,'r') as f:
+                        return ('__gz__',base64.b64encode(zlib.compress(f.read().strip())))
+                except Exception as e:
+                    raise Exception(e)
+        if string:
             try:
-                with open(file,'r') as f:
-                    return ('__gz__',base64.b64encode(zlib.compress(f.read().strip())))
+                return ('__gz__',base64.b64encode(zlib.compress(string.strip())))
             except Exception as e:
                 raise Exception(e)
+
+
 
     def run(self,*args,**kwargs):
         return {

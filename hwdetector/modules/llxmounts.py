@@ -9,7 +9,7 @@ log.debug("File "+__name__+" loaded")
 class LlxMounts(Detector):
 
     _PROVIDES = ['MOUNTS_INFO']
-    _NEEDS = []
+    _NEEDS = ['HELPER_COMPRESS_FILE']
 
     # def parse_findmnt(self,*args,**kwargs):
     #     ltree=args[0]
@@ -146,5 +146,6 @@ class LlxMounts(Detector):
     def run(self,*args,**kwargs):
         output = {'MOUNTS_INFO':None}
         output['MOUNTS_INFO']=self.get_mounts()
+        output['RAW_MOUNTS_INFO']=self.compress_file(file='/proc/self/mounts')
 
         return output

@@ -51,7 +51,7 @@ class LlxSystemInfo(Detector):
                 #        varlog[os.path.basename(file)]=('__gz__',base64.b64encode(zlib.compress(f.read().strip())))
                 #except Exception as e:
                 #    pass
-                varlog[os.path.basename(file)]=self.compress_file(file)
+                varlog[os.path.basename(file)]=self.compress_file(file=file)
         except Exception as e:
             return None
         return varlog
