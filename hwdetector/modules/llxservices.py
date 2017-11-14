@@ -23,7 +23,7 @@ class LlxServices(Detector):
 
         # SYSTEMCTL
         sysctl_out=self.execute(run='systemctl --plain --no-legend --no-pager list-units --all -t service')
-        info={'BYUNIT':{},'BYLOAD':{},'BYACTIVE':{},'BYSUB':{}}
+        info={'BYUNIT':{},'BYLOAD':{},'BYACTIVE':{},'BYSUB':{},'RAW':sysctl_out}
         regexp=re.compile(r'(?P<UNIT>[\w\-@]+).service\s+(?P<LOAD>\S+)\s+(?P<ACTIVE>\S+)\s+(?P<SUB>\S+)\s+(?P<NAME>.*$)')
         for line in sysctl_out.split('\n'):
             service_info=re.search(regexp,line)

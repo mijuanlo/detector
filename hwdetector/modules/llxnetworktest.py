@@ -35,7 +35,7 @@ class LlxNetworkTest(Detector):
         ifaces = [x for x in netinfo.keys() if x.startswith('eth')]
         for x in ifaces:
             if netinfo[x]['state'].lower() == 'up':
-                msg.append(self.make_result(result=x,msg='Ok! it\'s up'))
+                msg.append(self.make_result(result=x,msg='Ok! it\'s up (link-detected)'))
             else:
                 msg.append(self.make_result(result=x,msg='Nok ! it\'s down (no-link)'))
                 status=False
