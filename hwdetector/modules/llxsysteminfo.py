@@ -36,7 +36,8 @@ class LlxSystemInfo(Detector):
 
     def get_varlog(self,*args,**kwargs):
         varlog={}
-        regexp=re.compile(r'\w+(\.log)?$')
+        #regexp=re.compile(r'[_\-\w]+(\.log)?$')
+        regexp=re.compile(r'^[^\.]+(\.log|(\.\d+)+)?$')
         filter=lambda x: [ f for f in x if re.match(regexp,f)]
 
         try:
