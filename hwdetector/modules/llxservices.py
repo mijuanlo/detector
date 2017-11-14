@@ -10,7 +10,7 @@ log.debug("File "+__name__+" loaded")
 
 class LlxServices(Detector):
     _PROVIDES = ['SYSTEMCTL_INFO','APACHE_INFO','EPOPTES_INFO','DNSMASQ_INFO','SQUID_INFO']
-    _NEEDS = ['HELPER_EXECUTE','DPKG_INFO','N4D_STATUS','N4D_MODULES','HELPER_UNCOMMENT','NETINFO']
+    _NEEDS = ['HELPER_EXECUTE','DPKG_INFO','N4D_STATUS','N4D_MODULES','HELPER_UNCOMMENT','NETINFO','HELPER_COMPRESS_FILE']
 
     def run(self,*args,**kwargs):
         output={}
@@ -98,10 +98,10 @@ class LlxServices(Detector):
                 if '2872' in netinfo['netstat']['BYPORT']:
                     port_in_use=True
                 logfile = None
-                if os.path.exists('/var/log/epoptes.log'):
-                    with open('/var/log/epoptes.log','r') as f:
-                        logfile = base64.b64encode(zlib.compress(f.read().strip()))
-
+                file='/var/log/epoptes.log'
+                if os.path.exists(file):
+                    with open(file,'r') as f:
+                        logfile = self.compress_file(file)
                 epoptes_info={'logfile':logfile,'PORT_USED':port_in_use}
 
         output.update({'EPOPTES_INFO':epoptes_info})

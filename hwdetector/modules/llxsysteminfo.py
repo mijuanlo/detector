@@ -10,7 +10,7 @@ import zlib
 log.debug("File "+__name__+" loaded")
 
 class LlxSystemInfo(Detector):
-    _NEEDS=['HELPER_EXECUTE']
+    _NEEDS=['HELPER_EXECUTE','HELPER_COMPRESS_FILE']
     _PROVIDES=['LSHW_INFO','DMESG_INFO','VARLOG_INFO','LSUSB_INFO','DMESG_JOURNAL_INFO']
 
     def get_lshw(self,*args,**kwargs):
@@ -46,11 +46,12 @@ class LlxSystemInfo(Detector):
                 for filename in filter(filenames):
                     file_names.append(os.path.join(root,filename))
             for file in file_names:
-                try:
-                    with open(file,'r') as f:
-                        varlog[os.path.basename(file)]=('__gz__',base64.b64encode(zlib.compress(f.read().strip())))
-                except Exception as e:
-                    pass
+                #try:
+                #    with open(file,'r') as f:
+                #        varlog[os.path.basename(file)]=('__gz__',base64.b64encode(zlib.compress(f.read().strip())))
+                #except Exception as e:
+                #    pass
+                varlog[os.path.basename(file)]=self.compress_file(file)
         except Exception as e:
             return None
         return varlog

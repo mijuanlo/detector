@@ -160,7 +160,7 @@ class HwDetector:
         not_necessary = [ x for x in self.all_provides if x not in [y for y in self.all_needs]]
 
         if not_necessary:
-            log.warning('Provided {} not used by anybody'.format(','.join(not_necessary)))
+            log.info('Provided {} not used by anybody'.format(','.join(not_necessary)))
 
         for i in empty_provides:
             log.warning("Disabling class {} not providing anything".format(i))

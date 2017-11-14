@@ -154,7 +154,7 @@ class LlxLdap(Detector):
         if self.pwd:
             hash_digest_with_salt=base64.b64decode(base64.b64decode(p)[6:]).strip()
             salt=hash_digest_with_salt[hashlib.sha1().digest_size:]
-            compare=base64.b64encode("{SSHA}" + base64.encodestring(hashlib.sha1(str(pwd) + salt).digest() + salt))
+            compare=base64.b64encode("{SSHA}" + base64.encodestring(hashlib.sha1(str(self.pwd) + salt).digest() + salt))
             return p == compare
         return None
 

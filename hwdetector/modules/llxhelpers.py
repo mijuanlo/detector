@@ -6,11 +6,12 @@ import urllib2 as urllib
 import os.path
 import grp,pwd
 import subprocess,time
+import base64,zlib
 
 log.debug("File "+__name__+" loaded")
 
 class LlxHelpers(Detector):
-    _PROVIDES = ['HELPER_EXECUTE','HELPER_UNCOMMENT',"HELPER_GET_FILE_FROM_NET",'HELPER_FILE_FIND_LINE','HELPER_DEMOTE','HELPER_CHECK_ROOT','HELPER_WHO_I_AM','HELPER_USERS_LOGGED','ROOT_MODE']
+    _PROVIDES = ['HELPER_EXECUTE','HELPER_UNCOMMENT',"HELPER_GET_FILE_FROM_NET",'HELPER_FILE_FIND_LINE','HELPER_DEMOTE','HELPER_SET_ROOT_IDS','HELPER_CHECK_ROOT','HELPER_WHO_I_AM','HELPER_USERS_LOGGED','ROOT_MODE','HELPER_COMPRESS_FILE']
     _NEEDS = []
 
     # def _close_stderr(self):
@@ -44,7 +45,7 @@ class LlxHelpers(Detector):
                 for line in f.readlines():
                     m=re.match(reg,line)
                     if not m:
-                        r += line + "\n"
+                        r += line
                     #m=re.match(reg,line)
                     #if m:
                     #    r = r + m.group(1) + "\n"
@@ -145,7 +146,13 @@ class LlxHelpers(Detector):
         except Exception as e:
             return False
         return True
-
+    def set_root_ids(self,*args,**kwargs):
+        try:
+            os.seteuid(0)
+            os.setegid(0)
+        except Exception as e:
+            return False
+        return True
     def check_root(self,*args,**kwargs):
         if os.geteuid() == 0:
             return True
@@ -189,6 +196,10 @@ class LlxHelpers(Detector):
                 params.setdefault('stderr',subprocess.STDOUT)
             if kwargs['stderr'] == None or kwargs['stderr'] == 'no':
                 params.setdefault('stderr',open(os.devnull,'w'))
+            else:
+                params.setdefault('stderr',subprocess.PIPE)
+        else:
+            params.setdefault('stderr',subprocess.PIPE)
         params.setdefault('stdout',subprocess.PIPE)
         with_uncomment=False
         if 'nocomment' in kwargs:
@@ -207,6 +218,8 @@ class LlxHelpers(Detector):
                 params.setdefault('preexec_fn', self.demote)
                 user = 'nobody'
                 group = 'nogroup'
+            else:
+                params.setdefault('preexec_fn', self.set_root_ids)
 
         params.setdefault('shell',shell)
         stdout=None
@@ -215,14 +228,20 @@ class LlxHelpers(Detector):
         try:
             start=time.time()
             p=subprocess.Popen(runlist,**params)
-            while p.poll() is None and timeout_remaning > 0:
+            ret=p.poll()
+            while ret is None and timeout_remaning > 0:
                 time.sleep(delay)
                 timeout_remaning -= delay
                 stdout,stderr = p.communicate()
+                ret = p.poll()
             if stdout is None:
                 stdout,stderr = p.communicate()
             if timeout_remaning <= 0:
                 raise Exception('timeout({}) exceded while executing {}'.format(timeout,kwargs['run']))
+            if ret != 0:
+                if stderr != '':
+                    stderr = 'stderr={}'.format(stderr)
+                log.warning('Execution with exit code {} (possible error) {}'.format(ret,stderr))
         except Exception as e:
             log.error('Error executing: {}'.format(e))
             return None
@@ -234,6 +253,14 @@ class LlxHelpers(Detector):
         else:
             log.error("Execution of {} hasn't produced any result, returning None".format(kwargs['run']))
             return None
+    def compress_file(self,*args,**kwargs):
+        file=kwargs.get('file')
+        if file and os.path.exists(file):
+            try:
+                with open(file,'r') as f:
+                    return ('__gz__',base64.b64encode(zlib.compress(f.read().strip())))
+            except Exception as e:
+                raise Exception(e)
 
     def run(self,*args,**kwargs):
         return {
@@ -242,8 +269,10 @@ class LlxHelpers(Detector):
             'HELPER_GET_FILE_FROM_NET': {'code': self.get_file_from_net, 'glob': globals()},
             'HELPER_FILE_FIND_LINE':{'code': self.file_find_line, 'glob': globals()},
             'HELPER_DEMOTE':{'code':self.demote,'glob':globals()},
+            'HELPER_SET_ROOT_IDS':{'code':self.set_root_ids,'glob':globals()},
             'HELPER_CHECK_ROOT':{'code':self.check_root,'glob':globals()},
             'HELPER_WHO_I_AM':{'code':self.who_i_am,'glob':globals()},
             'HELPER_EXECUTE':{'code':self.execute,'glob':globals()},
-            'HELPER_USERS_LOGGED':{'code':self.users_logged,'glob':globals()}
+            'HELPER_USERS_LOGGED':{'code':self.users_logged,'glob':globals()},
+            'HELPER_COMPRESS_FILE':{'code':self.compress_file,'glob':globals()}
                 }
