@@ -33,7 +33,10 @@ class logger(logging.getLoggerClass()):
                     datefmt="%H:%M] [%S",
                     stream=sys.stderr
                 )
-            self.l = colorlog.getLogger()
+            try:
+                self.l = colorlog.getLogger()
+            except:
+                self.l = logging.getLogger()
         else:
             logging.basicConfig(
                 level=self.level,
