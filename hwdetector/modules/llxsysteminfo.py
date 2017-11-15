@@ -10,7 +10,7 @@ import zlib
 log.debug("File "+__name__+" loaded")
 
 class LlxSystemInfo(Detector):
-    _NEEDS=['HELPER_EXECUTE','HELPER_COMPRESS_FILE']
+    _NEEDS=['HELPER_EXECUTE','HELPER_COMPRESS_FILE','HELPER_LIST_FILES']
     _PROVIDES=['LSHW_INFO','DMESG_INFO','VARLOG_INFO','LSUSB_INFO','DMESG_JOURNAL_INFO']
 
     def get_lshw(self,*args,**kwargs):
@@ -36,22 +36,17 @@ class LlxSystemInfo(Detector):
 
     def get_varlog(self,*args,**kwargs):
         varlog={}
-        #regexp=re.compile(r'[_\-\w]+(\.log)?$')
         regexp=re.compile(r'^[^\.]+(\.log|(\.\d+)+)?$')
-        filter=lambda x: [ f for f in x if re.match(regexp,f)]
+        #filter=lambda x: [ f for f in x if re.match(regexp,f)]
 
         try:
-            prefix='/var/log'
-            file_names=[]
-            for root,dirnames,filenames in os.walk(prefix):
-                for filename in filter(filenames):
-                    file_names.append(os.path.join(root,filename))
+            #prefix='/var/log'
+            #file_names=[]
+            #for root,dirnames,filenames in os.walk(prefix):
+            #    for filename in filter(filenames):
+            #        file_names.append(os.path.join(root,filename))
+            file_names=self.list_files(path='/var/log',regexp=regexp)
             for file in file_names:
-                #try:
-                #    with open(file,'r') as f:
-                #        varlog[os.path.basename(file)]=('__gz__',base64.b64encode(zlib.compress(f.read().strip())))
-                #except Exception as e:
-                #    pass
                 varlog[os.path.basename(file)]=self.compress_file(file=file)
         except Exception as e:
             return None

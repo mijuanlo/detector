@@ -7,8 +7,8 @@ import re
 log.debug("File "+__name__+" loaded")
 
 class LlxSystemSW(Detector):
-    _PROVIDES = ['DPKG_INFO']
-    _NEEDS = ['HELPER_EXECUTE']
+    _PROVIDES = ['DPKG_INFO','APT_SOURCES']
+    _NEEDS = ['HELPER_EXECUTE','HELPER_COMPACT_FILES']
 
     def run(self,*args,**kwargs):
         output={}
@@ -37,4 +37,5 @@ class LlxSystemSW(Detector):
                     dpkg_info['BYSTATUS'][status]=[d]
 
         output.update({'DPKG_INFO':dpkg_info})
+        output.update({'APT_SOURCES':self.compact_files(path=['/etc/apt/sources.list','/etc/apt/sources.list.d/'],regexp=r'[^\.]+\.list$')})
         return output

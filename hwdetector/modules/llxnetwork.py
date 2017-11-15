@@ -10,7 +10,7 @@ log.debug("File "+__name__+" loaded")
 class LlxNetwork(Detector):
 
     _PROVIDES=["NETINFO"]
-    _NEEDS=['HELPER_UNCOMMENT',"HELPER_GET_FILE_FROM_NET","HELPER_EXECUTE"]
+    _NEEDS=['HELPER_UNCOMMENT',"HELPER_GET_FILE_FROM_NET","HELPER_EXECUTE",'HELPER_COMPACT_FILES']
 
     def get_routes(self,*args,**kwargs):
         routes = self.execute(run="ip r",stderr=None).split("\n")
@@ -188,6 +188,7 @@ class LlxNetwork(Detector):
         output['proxy']=proxy
 
         output['netstat']=self.get_listens()
+        output['network_interfaces']=self.compact_files(path=['/etc/network/interfaces','/etc/network/interfaces.d/'])
         #s=json.dumps(output)
 
         return {'NETINFO':output}

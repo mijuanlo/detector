@@ -11,7 +11,7 @@ import base64,zlib
 log.debug("File "+__name__+" loaded")
 
 class LlxHelpers(Detector):
-    _PROVIDES = ['HELPER_EXECUTE','HELPER_UNCOMMENT',"HELPER_GET_FILE_FROM_NET",'HELPER_FILE_FIND_LINE','HELPER_DEMOTE','HELPER_SET_ROOT_IDS','HELPER_CHECK_ROOT','HELPER_WHO_I_AM','HELPER_USERS_LOGGED','ROOT_MODE','HELPER_COMPRESS_FILE']
+    _PROVIDES = ['HELPER_EXECUTE','HELPER_UNCOMMENT',"HELPER_GET_FILE_FROM_NET",'HELPER_FILE_FIND_LINE','HELPER_DEMOTE','HELPER_SET_ROOT_IDS','HELPER_CHECK_ROOT','HELPER_WHO_I_AM','HELPER_USERS_LOGGED','ROOT_MODE','HELPER_COMPRESS_FILE','HELPER_LIST_FILES','HELPER_COMPACT_FILES']
     _NEEDS = []
 
     # def _close_stderr(self):
@@ -256,7 +256,7 @@ class LlxHelpers(Detector):
     def compress_file(self,*args,**kwargs):
         file=kwargs.get('file')
         string=kwargs.get('string')
-        if not file and not string:
+        if not ('file' in kwargs or  'string' in kwargs):
             log.error('Compressing called without \'file\' or \'string\' keyparam')
         if file:
             if os.path.exists(file):
@@ -271,7 +271,57 @@ class LlxHelpers(Detector):
             except Exception as e:
                 raise Exception(e)
 
+    def list_files(self,*args,**kwargs):
+        path=kwargs.get('path')
+        filter=kwargs.get('filter')
+        regexp=kwargs.get('regexp')
 
+        if not path:
+            return None
+
+        paths=[]
+        if type(path) == type(str()):
+            paths.append(path)
+        elif type(path) == type(list()):
+            for x in [ x for x in path if type(x) == type(str()) ]:
+                paths.append(x)
+        else:
+            return None
+
+        paths=[x for x in paths if os.path.exists(x)]
+
+        if regexp:
+            reg=re.compile(regexp)
+            filter=lambda x: [ f for f in x if re.match(reg,f)]
+
+        files=[]
+
+        for p in paths:
+            if os.path.isdir(p):
+                for root,dirnames,filenames in os.walk(p):
+                    if filter:
+                        for filename in filter(filenames):
+                            files.append(os.path.join(root,filename))
+                    else:
+                        for filename in filenames:
+                            files.append(os.path.join(root,filename))
+            else:
+                files.append(p)
+        return files
+
+    def compact_files(self,*args,**kwargs):
+        files=self.list_files(*args,**kwargs)
+        if not (files and type(files) == type(list())):
+            return None
+        content=''
+        for file in files:
+            try:
+                with open(file,'r') as f:
+                    content+=f.read()
+            except Exception as e:
+                pass
+
+        return self.uncomment(content)
 
     def run(self,*args,**kwargs):
         return {
@@ -285,5 +335,7 @@ class LlxHelpers(Detector):
             'HELPER_WHO_I_AM':{'code':self.who_i_am,'glob':globals()},
             'HELPER_EXECUTE':{'code':self.execute,'glob':globals()},
             'HELPER_USERS_LOGGED':{'code':self.users_logged,'glob':globals()},
-            'HELPER_COMPRESS_FILE':{'code':self.compress_file,'glob':globals()}
+            'HELPER_COMPRESS_FILE':{'code':self.compress_file,'glob':globals()},
+            'HELPER_COMPACT_FILES':{'code':self.compact_files,'glob':globals()},
+            'HELPER_LIST_FILES':{'code':self.list_files,'glob':globals()}
                 }
