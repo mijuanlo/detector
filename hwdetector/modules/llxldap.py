@@ -262,7 +262,7 @@ class LlxLdap(Detector):
                 mode='INDEPENDENT'
                 netinfo=kwargs['NETINFO']
                 if netinfo:
-                    aliased_interfaces = [ k for k in netinfo if 'nalias' in netinfo[k] and netinfo[k]['nalias'] > 0 ]
+                    aliased_interfaces = [ k for k in netinfo if type(netinfo[k]) == type(dict()) and 'nalias' in netinfo[k] and netinfo[k]['nalias'] > 0 ]
                     for i in aliased_interfaces:
                         for n in range(netinfo[i]['nalias']):
                             if 'alias'+str(n+1)+'_ifaddr' in netinfo[i]:

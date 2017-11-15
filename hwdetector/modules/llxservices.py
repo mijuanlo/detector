@@ -10,7 +10,7 @@ log.debug("File "+__name__+" loaded")
 
 class LlxServices(Detector):
     _PROVIDES = ['SYSTEMCTL_INFO','APACHE_INFO','EPOPTES_INFO','DNSMASQ_INFO','SQUID_INFO']
-    _NEEDS = ['HELPER_EXECUTE','DPKG_INFO','N4D_STATUS','N4D_MODULES','HELPER_UNCOMMENT','NETINFO','HELPER_COMPRESS_FILE']
+    _NEEDS = ['HELPER_EXECUTE','DPKG_INFO','N4D_STATUS','N4D_MODULES','HELPER_UNCOMMENT','NETINFO','HELPER_COMPRESS_FILE','HELPER_COMPACT_FILES','HELPER_FILE_FIND_LINE']
 
     def run(self,*args,**kwargs):
         output={}
@@ -106,8 +106,11 @@ class LlxServices(Detector):
         output.update({'EPOPTES_INFO':epoptes_info})
 
         # DNSMASQ
-        output.update({'DNSMASQ_INFO':None})
-
+        main_conf=self.compact_files(path=['/etc/dnsmasq.conf','/etc/dnsmasq.d/'])
+        lines=self.file_find_line(main_conf,'conf-dir','=','.+',multiple_result=True)
+        paths=[line[0].split('=')[1].strip() for line in lines]
+        content=main_conf+'\n'+self.compact_files(path=paths)
+        output.update({'DNSMASQ_INFO':{'config':content}})
         # SQUID
         output.update({'SQUID_INFO':None})
         return output

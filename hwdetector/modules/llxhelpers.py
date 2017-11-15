@@ -87,54 +87,60 @@ class LlxHelpers(Detector):
         except Exception as e:
             return None
 
-    def file_find_line(self,*args,**kwargs):
+    def file_find_line(self, content, *args, **kwargs):
 
-        if not (type(args[0]) == type(str()) or type(args[0]) == type(list())):
+        if not (isinstance(content,str) or isinstance(content,list)):
             return None
 
-        is_file=os.path.isfile(args[0])
+        is_file=os.path.isfile(content)
 
-        multimatch = type(args[1]) == type(list())
+        multimatch = isinstance(args[0],list)
 
         if not multimatch:
-            keys = [ k.strip() for k in args[1:] if k and k.strip() ]
+            keys = [k.strip() for k in args if k]
         else:
             keys = []
-            for k_item in args[1]:
-                if type(k_item) == type(list()):
-                    keys.append([k.strip() for k in k_item if k and k.strip()])
+            for k_item in args[0]:
+                if isinstance(k_item,list):
+                    keys.append([k.strip() for k in k_item if k])
 
         if not is_file:
-            if type(args[0]) != type(list()):
-                s = args[0].split("\n")
+            if not isinstance(content,list):
+                s = content.split("\n")
             else:
-                s=args[0]
+                s = content
         else:
-            with open(args[0],'r') as f:
+            with open(content,'r') as f:
                 s=f.readlines()
 
         if not multimatch:
-            r=re.compile('\s+'.join(keys),re.IGNORECASE)
+            r=re.compile('\s*'.join(keys),re.IGNORECASE)
         else:
             r=[]
             for k in keys:
-                r.append(re.compile('\s+'.join(k),re.IGNORECASE))
+                r.append(re.compile('\s*'.join(k),re.IGNORECASE))
         i=0
         output = []
         for line in s:
             if not multimatch:
                 m=re.findall(r,line)
                 if m:
-                    return m
+                    if kwargs.get('multiple_result',False):
+                        output.append(m)
+                    else:
+                        return m
             else:
                 m=[ test for test in [ re.findall(regexp,line) for regexp in r ] if test ]
                 if m:
                     i = i+1
                     output.append(m[0])
                 if i == len(r):
-                    return output
+                    if kwargs.get('multiple_result',False):
+                        output.append(m[0])
+                    else:
+                        return output
 
-        return None
+        return output
 
     def demote(self,*args,**kwargs):
         try:
@@ -278,6 +284,7 @@ class LlxHelpers(Detector):
         regexp=kwargs.get('regexp')
 
         if not path:
+            log.error('List files called without \'path\' keyparameter')
             return None
 
         paths=[]
