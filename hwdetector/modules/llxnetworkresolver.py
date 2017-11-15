@@ -84,7 +84,7 @@ class LlxNetworkResolver(Detector):
         else: # OTHERS
             pass
 
-        nslist.extend(['pmb','opac','proxy','owncloud','jclic-aula','cups','share','mirror','preseed'])
+        nslist.extend(['pmb','opac','proxy','owncloud','jclic-aula','cups','share','mirror','preseed','www','ntp','srv','servidor','lliurexlab','error','ipxeboot','admin-center','lliurex-mirror'])
         for ns in nslist:
             r = self.addr_checks(ns)
             # if not r:
