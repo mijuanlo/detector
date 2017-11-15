@@ -112,5 +112,12 @@ class LlxServices(Detector):
         content=main_conf+'\n'+self.compact_files(path=paths)
         output.update({'DNSMASQ_INFO':{'config':content}})
         # SQUID
-        output.update({'SQUID_INFO':None})
+        main_conf=self.uncomment('/etc/squid/squid.conf')
+        lines=self.file_find_line(main_conf,'[^\.]+\.conf"$',multiple_result=True)
+        files = [ re.findall(r'"(\S+)"',f[0])[0] for f in lines]
+        file_contents={}
+        file_contents.setdefault('/etc/squid/squid.conf',main_conf)
+        for file in files:
+            file_contents.setdefault(file,self.uncomment(file))
+        output.update({'SQUID_INFO':{'config':file_contents}})
         return output
