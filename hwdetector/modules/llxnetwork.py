@@ -189,6 +189,12 @@ class LlxNetwork(Detector):
 
         output['netstat']=self.get_listens()
         output['network_interfaces']=self.compact_files(path=['/etc/network/interfaces','/etc/network/interfaces.d/'])
+        output['iptables_rules']=self.execute(run='iptables -L',stderr=None,asroot=True)
+        forward=self.execute(run='sysctl -n net.ipv4.ip_forward',stderr=None)
+        if forward == '1':
+            output['forwading']=True
+        else:
+            output['forwading']=False
         #s=json.dumps(output)
 
         return {'NETINFO':output}

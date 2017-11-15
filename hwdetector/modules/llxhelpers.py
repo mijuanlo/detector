@@ -180,6 +180,7 @@ class LlxHelpers(Detector):
     def execute(self,timeout=3.0,shell=False,*args,**kwargs):
         params={}
         if 'run' not in kwargs:
+            log.error('Execute called without \'run\' key parameter')
             return None
         else:
             if type(kwargs['run']) != type(list()):
