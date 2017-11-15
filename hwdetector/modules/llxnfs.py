@@ -1,13 +1,12 @@
 #!/usr/bin/env python
 import hwdetector.Detector as Detector
 import utils.log as log
-import subprocess
 import os.path
 
 log.debug("File "+__name__+" loaded")
 
 class LlxNfs(Detector):
-    _NEEDS = ['HELPER_UNCOMMENT']
+    _NEEDS = ['HELPER_UNCOMMENT','HELPER_EXECUTE']
     _PROVIDES = ['NFS_INFO']
 
     def check_exports(self,*args,**kwargs):
@@ -26,7 +25,7 @@ class LlxNfs(Detector):
             content='\n'.join(content)
         else:
             content= None
-        exported = subprocess.check_output(['showmount','-e','--no-headers'])
+        exported = self.execute(run='showmount -e --no-headers',stderr=None)
         if exported:
             exported = exported.split("\n")
         else:

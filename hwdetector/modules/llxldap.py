@@ -1,25 +1,36 @@
 #!/usr/bin/env python
 import hwdetector.Detector as Detector
 import utils.log as log
-import subprocess
-import os
 import re
 import base64
 import hashlib
+import os
 
 log.debug("File "+__name__+" loaded")
 
 class LlxLdap(Detector):
-    _NEEDS = ['HELPER_FILE_FIND_LINE','HELPER_UNCOMMENT','HELPER_CHECK_OPEN_PORT','HELPER_DEMOTE','NETINFO']
-    _PROVIDES = ['LDAP_INFO','LDAP_MODE','LDAP_MASTER_IP']
+    _NEEDS = ['HELPER_EXECUTE','HELPER_FILE_FIND_LINE','HELPER_UNCOMMENT','HELPER_CHECK_OPEN_PORT','LLIUREX_RELEASE','HELPER_CHECK_ROOT','NETINFO','N4D_VARS','HELPER_CHECK_NS','HELPER_COMPRESS_FILE']
+    _PROVIDES = ['SERVER_LDAP','LDAP_INFO','LDAP_MODE','LDAP_MASTER_IP','LOCAL_LDAP']
 
     def check_files(self,*args,**kwargs):
+        release=args[0]
+        mode=args[1]
+        server=args[2]
+
+        if not server:
+            log.error('Unable to locate ldap server')
+
+        if mode and mode.lower() == 'independent':
+            servername = server
+        else:
+            servername = 'localhost'
+
         output={}
         content_ldap_conf=self.uncomment("/etc/ldap.conf")
         ldap_conf_ok = self.file_find_line(content_ldap_conf,
         [
             ['^base','dc=ma5,dc=lliurex,dc=net'],
-            ['^uri','ldap://localhost'],
+            ['^uri','ldap://'+servername],
             ['^nss_base_group','ou=Groups,dc=ma5,dc=lliurex,dc=net'],
             ['^nss_map_attribute','gecos','description']
         ])
@@ -27,7 +38,7 @@ class LlxLdap(Detector):
         etc_ldap_ldap_conf_ok = self.file_find_line(content_etc_ldap_ldap_conf,
         [
             ['^BASE','dc=ma5,dc=lliurex,dc=net'],
-            ['^URI','ldaps://localhost']
+            ['^URI','ldaps://'+servername]
         ])
         if ldap_conf_ok:
             output['etc_ldap_conf']={'syntax':'OK','content':content_ldap_conf}
@@ -54,11 +65,20 @@ class LlxLdap(Detector):
 
     def check_ports(self,*args,**kwargs):
         ports=['389','636']
+        server=args[0]
+        #localldap=args[1]
+        # split uri
+        #server=re.findall(r'(?:[^/]+/+)?(.*)$',server)[0]
+        #if not localldap:
+        #    # is dnsname?
+        #    is_ip=re.findall(r'(\d+(?:\.\d+){3})',server)[0]
+        #    if is_ip:
+        #        server=is_ip[0]
         out = {}
         for p in ports:
-            out[p]=self.check_open_port('server',p)
+            out[p]=self.check_open_port(server,p)
         try:
-            self.file_find_line(subprocess.check_output(['netstat','-nx']),'/var/run/slapd/ldapi')
+            self.file_find_line(self.execute(run='netstat -nx'),'/var/run/slapd/ldapi')
             out['LDAPI']=True
         except Exception as e:
             out['LDAPI']=False
@@ -115,25 +135,57 @@ class LlxLdap(Detector):
                 out.update({k:d[k]})
         return out
 
+    def read_pass(self):
+        self.pwd=None
+        sfile='/etc/ldap.secret'
+        try:
+            if not os.path.exists(sfile):
+                sfile=None
+            else:
+                with open(sfile,'r') as f:
+                    self.pwd=f.read().strip()
+        except:
+            if sfile:
+                log.warning('Running as user, secret file verification is not possible')
+            pass
+
     def checkpass(self,*args,**kwargs):
         p=args[0]
-        pwd=None
-        with open('/etc/ldap.secret','r') as f:
-            pwd=f.read().strip()
-        if pwd:
+        if self.pwd:
             hash_digest_with_salt=base64.b64decode(base64.b64decode(p)[6:]).strip()
             salt=hash_digest_with_salt[hashlib.sha1().digest_size:]
-            compare=base64.b64encode("{SSHA}" + base64.encodestring(hashlib.sha1(str(pwd) + salt).digest() + salt))
+            compare=base64.b64encode("{SSHA}" + base64.encodestring(hashlib.sha1(str(self.pwd) + salt).digest() + salt))
             return p == compare
+        return None
 
     def get_ldap_config(self,*args,**kwargs):
-        db=subprocess.check_output(['ldapsearch','-Y','EXTERNAL','-H','ldapi:///','-LLL'],stderr=open(os.devnull,'w'), preexec_fn=self.demote)
+        release=args[0].lower()
+        server=args[1]
+        root_mode=self.check_root()
+        kw={'stderr':None}
+
+        if root_mode:
+            kw.setdefault('asroot',True)
+        auth="-Y EXTERNAL"
+        uri="ldapi:///"
+
+        if release=='client' and self.pwd:
+            auth="-D cn=admin,dc=ma5,dc=lliurex,dc=net -w "+self.pwd
+            uri="ldaps://"+server+":636"
+
         try:
-            config=subprocess.check_output(['ldapsearch','-Y','EXTERNAL','-H','ldapi:///','-b','cn=config','-LLL'],stderr=open(os.devnull,'w'), preexec_fn=self.demote)
+            db=self.execute(run='ldapsearch {} -H {} -LLL'.format(auth,uri),**kw)
+            tree_db=self.parse_tree(db)
+        except:
+            db=None
+            tree_db=None
+        try:
+            config=self.execute(run='ldapsearch {} -H {} -b cn=config -LLL'.format(auth,uri),**kw)
+            tree_config=self.parse_tree(config)
         except:
             config=None
-        tree_db=self.parse_tree(db)
-        tree_config=self.parse_tree(config)
+            tree_config=None
+
         try:
             tree_db['net']['lliurex']['ma5']['o']
             init_done=True
@@ -146,17 +198,53 @@ class LlxLdap(Detector):
                 good_pass=self.checkpass(tree_config['config']['{1}mdb']['olcRootPW:'][0])
         else:
             good_pass=None
-        return {'CONFIG':tree_config,'DB':tree_db,'INITIALIZED':init_done,'SECRET_STATUS':good_pass}
+        return {'CONFIG':tree_config,'DB':tree_db,'RAW_CONFIG':self.compress_file(string=config),'RAW_DB':self.compress_file(string=db),'INITIALIZED':init_done,'SECRET_STATUS':good_pass}
 
     def run(self,*args,**kwargs):
         out = {'LDAP_MASTER_IP':None}
         output = {}
-        output['FILES'] = self.check_files()
-        output['PORTS'] = self.check_ports()
+        release=kwargs['LLIUREX_RELEASE']
+        vars=kwargs['N4D_VARS']
+        mapping={'CLIENT_LDAP_URI':'SERVER_LDAP'}
+        server=None
+        localldap=None
+
+        # Guess server ldap uri
+        for search_var in mapping:
+            if search_var in vars and 'value' in vars[search_var]:
+                out.update({mapping[search_var]:vars[search_var]['value']})
+                server=vars[search_var]['value']
+                out.setdefault('LOCAL_LDAP',True)
+                localldap=True
+        if not server:
+            ip_server=self.check_ns('server')
+            ip_server2=kwargs['NETINFO']['gw']['via']
+            if not ip_server:
+                log.error("'server' not resolvable")
+                if ip_server2:
+                    server=ip_server2
+                else:
+                    log.error('not detected any gateway')
+            else:
+                server=ip_server
+                if ip_server != ip_server2:
+                    log.warning("'server' is not my gateway")
+            if server:
+                out.update({'SERVER_LDAP':server})
+                out.update({'LOCAL_LDAP':False})
+                localldap=False
+            else:
+                out.update({'SERVER_LDAP':None})
+                out.update({'LOCAL_LDAP':None})
+                localldap=None
+
+        self.read_pass()
+
+        output['PORTS'] = self.check_ports(server,localldap)
         mode=None
 
         if output['PORTS']['636']:
-            output['CONFIG']=self.get_ldap_config()
+            output['CONFIG']=self.get_ldap_config(release,server)
             mode='UNKNOWN'
             try:
                 test=output['CONFIG']['INITIALIZED']
@@ -170,7 +258,7 @@ class LlxLdap(Detector):
                     m=re.search(r'provider=ldapi?://(?P<LDAP_MASTER_IP>\d+\.\d+\.\d+\.\d+)',output['CONFIG']['CONFIG']['config']['{1}mdb']['olcSyncrepl'][0])
                     if m:
                         out.update(m.groupdict())
-            except:# indep or master(running without permissions)
+            except:# indep or (master/slave(running without permissions))
                 mode='INDEPENDENT'
                 netinfo=kwargs['NETINFO']
                 if netinfo:
@@ -181,10 +269,10 @@ class LlxLdap(Detector):
                                 ip_alias=netinfo[i]['alias'+str(n+1)+'_ifaddr'].split('.')[3].split('/')[0]
                                 if ip_alias=='1':
                                     mode='SLAVE'
-                                elif ipalias=='254':
+                                elif ip_alias=='254':
                                     mode='MASTER'
 
-
+        output['FILES'] = self.check_files(release,mode,server)
         out.update( {'LDAP_INFO':output,'LDAP_MODE':mode})
 
         return out
