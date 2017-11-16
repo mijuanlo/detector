@@ -22,7 +22,7 @@ class LlxSystemInfo(Detector):
 
     def get_dmesg(self,*args,**kwargs):
         try:
-            dmesg=json.loads(self.execute(run='journalctl -o json --dmesg --reverse --since today',stderr=None))
+            dmesg=self.execute(run='journalctl --dmesg --no-pager --reverse --since today',stderr=None)
             return dmesg
         except Exception as e:
             return None

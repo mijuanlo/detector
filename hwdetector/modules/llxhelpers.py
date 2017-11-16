@@ -34,12 +34,17 @@ class LlxHelpers(Detector):
 
     def uncomment(self,*args,**kwargs):
         r = ''
+        comments=kwargs.get('comments',['#'])
+        creg=[]
+        for c in comments:
+            creg.append(c+'.*')
+        creg='|'.join(creg)
         try:
             is_file = os.path.isfile(args[0])
         except:
             is_file = False
         if is_file:
-            reg=re.compile(r'^(\s*|#.*)*$')
+            reg=re.compile(r'^(\s*|{})*$'.format(creg))
             with open(args[0],'r') as f:
                 for line in f.readlines():
                     m=re.match(reg,line)
@@ -265,7 +270,7 @@ class LlxHelpers(Detector):
                     with open(file,'r') as f:
                         return ('__gz__',base64.b64encode(zlib.compress(f.read().strip())))
                 except Exception as e:
-                    raise Exception(e)
+                    return 'NOT_READABLE'
         if string:
             try:
                 return ('__gz__',base64.b64encode(zlib.compress(string.strip())))

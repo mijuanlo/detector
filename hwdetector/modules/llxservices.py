@@ -9,7 +9,7 @@ import base64,zlib
 log.debug("File "+__name__+" loaded")
 
 class LlxServices(Detector):
-    _PROVIDES = ['SYSTEMCTL_INFO','APACHE_INFO','EPOPTES_INFO','DNSMASQ_INFO','SQUID_INFO']
+    _PROVIDES = ['SYSTEMCTL_INFO','APACHE_INFO','EPOPTES_INFO','DNSMASQ_INFO','SQUID_INFO','SAMBA_INFO']
     _NEEDS = ['HELPER_EXECUTE','DPKG_INFO','N4D_STATUS','N4D_MODULES','HELPER_UNCOMMENT','NETINFO','HELPER_COMPRESS_FILE','HELPER_COMPACT_FILES','HELPER_FILE_FIND_LINE']
 
     def run(self,*args,**kwargs):
@@ -41,18 +41,19 @@ class LlxServices(Detector):
         output.update({'APACHE_INFO':None})
 
         if has_apache:
-            apacheconf=''
-            files=['/etc/apache2/apache2.conf','/etc/apache2/envvars','/etc/apache2/ports.conf']
-            dirs=['/etc/apache2/conf-enabled/','/etc/apache2/mods-enabled/','/etc/apache2/sites-enabled/']
-            for dir in dirs:
-                if os.path.exists(dir):
-                    for file in os.listdir(dir):
-                        files.append(dir+'/'+file)
-            for file in files:
-                if os.path.exists(file):
-                    with open(file,'r') as f:
-                        apacheconf+=f.read()+"\n"
-            apacheconf=self.uncomment(apacheconf)
+            #apacheconf=''
+            #files=['/etc/apache2/apache2.conf','/etc/apache2/envvars','/etc/apache2/ports.conf']
+            #dirs=['/etc/apache2/conf-enabled/','/etc/apache2/mods-enabled/','/etc/apache2/sites-enabled/']
+            # for dir in dirs:
+            #     if os.path.exists(dir):
+            #         for file in os.listdir(dir):
+            #             files.append(dir+'/'+file)
+            # for file in files:
+            #     if os.path.exists(file):
+            #         with open(file,'r') as f:
+            #             apacheconf+=f.read()+"\n"
+            #apacheconf=self.uncomment(apacheconf)
+            apacheconf=self.compact_files(path=['/etc/apache2/apache2.conf','/etc/apache2/envvars','/etc/apache2/ports.conf','/etc/apache2/conf-enabled/','/etc/apache2/mods-enabled/','/etc/apache2/sites-enabled/'])
             try:
                 syntax=self.execute(run='apachectl -t',stderr='stdout')
                 if 'syntax ok' in syntax.lower():
@@ -111,6 +112,7 @@ class LlxServices(Detector):
         paths=[line[0].split('=')[1].strip() for line in lines]
         content=main_conf+'\n'+self.compact_files(path=paths)
         output.update({'DNSMASQ_INFO':{'config':content}})
+
         # SQUID
         main_conf=self.uncomment('/etc/squid/squid.conf')
         lines=self.file_find_line(main_conf,'[^\.]+\.conf"$',multiple_result=True)
@@ -120,4 +122,14 @@ class LlxServices(Detector):
         for file in files:
             file_contents.setdefault(file,self.uncomment(file))
         output.update({'SQUID_INFO':{'config':file_contents}})
+
+        #SAMBA
+        main_conf=self.uncomment('/etc/samba/smb.conf',comments=[';','#'])
+        lines=self.file_find_line(main_conf,[['include','=','\S+']])
+        paths=[line[0].split('=')[1].strip() for line in lines]
+        content=main_conf+'\n'+self.compact_files(path=paths)
+        resources_local=self.execute(run='smbclient -L localhost -N -g',stderr=None)
+        resources_server=self.execute(run='smbclient -L server -N -g',stderr=None)
+        output.update({'SAMBA_INFO':{'config':content,'resources_local':resources_local,'resources_server':resources_server}})
+
         return output
