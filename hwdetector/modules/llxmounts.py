@@ -146,7 +146,7 @@ class LlxMounts(Detector):
     def get_server_sync(self,*args,**kwargs):
         if not os.path.isdir('/net/server-sync'):
             return 'NO_EXIST'
-        lst=self.execute(run='getfacl -tp -R /net/server-sync/').split('\n')
+        lst=self.execute(run='getfacl -tp -R /net/server-sync/',stderr=None,asroot=True).split('\n')
         regexp=re.compile('^#\sfile:\s/net/server-sync(\S+)')
         skip_search=False
         d={}
