@@ -45,11 +45,15 @@ class LlxHelpers(Detector):
             is_file = False
         if is_file:
             reg=re.compile(r'^(\s*|{})*$'.format(creg))
-            with open(args[0],'r') as f:
-                for line in f.readlines():
-                    m=re.match(reg,line)
-                    if not m:
-                        r += line
+            try:
+                with open(args[0],'r') as f:
+                    for line in f.readlines():
+                        m=re.match(reg,line)
+                        if not m:
+                            r += line
+            except:
+                log.warning('Trying to read unreadable file {}'.format(args[0]))
+                r += 'NOT_READABLE'
 
         else:
             if type(args[0]) == type(list()):

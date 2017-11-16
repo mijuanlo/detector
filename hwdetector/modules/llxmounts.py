@@ -8,7 +8,7 @@ log.debug("File "+__name__+" loaded")
 
 class LlxMounts(Detector):
 
-    _PROVIDES = ['MOUNTS_INFO']
+    _PROVIDES = ['MOUNTS_INFO','FSTAB','DISK_IDS']
     _NEEDS = ['HELPER_COMPRESS_FILE']
 
     # def parse_findmnt(self,*args,**kwargs):
@@ -147,5 +147,7 @@ class LlxMounts(Detector):
         output = {'MOUNTS_INFO':None}
         output['MOUNTS_INFO']=self.get_mounts()
         output['RAW_MOUNTS_INFO']=self.compress_file(file='/proc/self/mounts')
+        output['FSTAB']=self.uncomment('/etc/fstab')
+        output['DISK_IDS']=self.execute(run='blkid',stderr=None)
 
         return output

@@ -10,8 +10,8 @@ import zlib
 log.debug("File "+__name__+" loaded")
 
 class LlxSystemInfo(Detector):
-    _NEEDS=['HELPER_EXECUTE','HELPER_COMPRESS_FILE','HELPER_LIST_FILES']
-    _PROVIDES=['LSHW_INFO','DMESG_INFO','VARLOG_INFO','LSUSB_INFO','DMESG_JOURNAL_INFO','SYSCTL_INFO']
+    _NEEDS=['HELPER_EXECUTE','HELPER_COMPRESS_FILE','HELPER_LIST_FILES','HELPER_UNCOMMENT']
+    _PROVIDES=['LSHW_INFO','DMESG_INFO','VARLOG_INFO','LSUSB_INFO','DMESG_JOURNAL_INFO','SYSCTL_INFO','PAM_INFO','SUDO_INFO']
 
     def get_lshw(self,*args,**kwargs):
         try:
@@ -73,6 +73,20 @@ class LlxSystemInfo(Detector):
             make_hierarchy(d,key.split('.'),value)
         return d
 
+    def get_pams(self,*args,**kwargs):
+        files=self.list_files(path=['/etc/pam.conf','/etc/pam.d/','/usr/share/pam-configs/'])
+        d={}
+        for file in files:
+            d.setdefault(file,self.uncomment(file))
+        return d
+
+    def get_sudoers(self,*args,**kwargs):
+        files=self.list_files(path=['/etc/sudoers','/etc/sudoers.d/'])
+        d={}
+        for file in files:
+            d.setdefault(file,self.uncomment(file))
+        return d
+
     def run(self,*args,**kwargs):
         output={'LSHW_INFO':{},'DMESG_INFO':{},'SYSLOG_INFO':{},'LSUSB_INFO':{}}
 
@@ -82,5 +96,6 @@ class LlxSystemInfo(Detector):
         output['VARLOG_INFO']=self.get_varlog()
         output['LSUSB_INFO']=self.get_lsusb()
         output['SYSCTL_INFO']=self.get_sysctl()
-
+        output['PAM_INFO']=self.get_pams()
+        output['SUDO_INFO']=self.get_sudoers()
         return output
