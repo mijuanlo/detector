@@ -139,7 +139,7 @@ class LlxNetwork(Detector):
             if pacfile:
                 output['autoconfig']['pacfile'] = pacfile
             else:
-                output['autoconfig']['pacfile'] = 'NOT AVAILABLE'
+                output['autoconfig']['pacfile'] = ''
 
         return output
 

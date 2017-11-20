@@ -1,0 +1,3 @@
+LLIUREX_VERSION = none -> 'This system can\'t be detected as a LliureX system, detection only make simpler tests'
+NETINFO.gw.reachable = false -> "The gateway isn't reachable" ? 'Maybe gateway is powered off?',"Maybe the cable is not correctly plugged in!"
+#LLIUREX_VERSION != none, LLIUREX_RELEASE == server, NETINFO.$(INTERNAL_INTERFACE).state != up ->

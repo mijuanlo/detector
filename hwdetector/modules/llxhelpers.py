@@ -71,8 +71,18 @@ class LlxHelpers(Detector):
     def get_file_from_net(self,*args,**kwargs):
         if not args[0]:
             return None
-        if 'proxy' in kwargs and kwargs['proxy'] == True:
+        if kwargs.get('proxy',None):
+        #if 'proxy' in kwargs and kwargs['proxy'] == True:
             proxy = urllib.ProxyHandler() #use autodetected proxies
+            proxydata={}
+            if kwargs.get('proxy_http',None):
+                proxydata.setdefault('http',kwargs.get(kwargs.get('proxy_http')))
+            if kwargs.get('proxy_http',None):
+                proxydata.setdefault('https',kwargs.get(kwargs.get('proxy_https')))
+
+            if proxydata:
+                proxy = urllib.ProxyHandler(proxydata)
+
             opener = urllib.build_opener(proxy)
             urllib.install_opener(opener)
 
