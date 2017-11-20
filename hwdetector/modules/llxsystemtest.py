@@ -23,7 +23,7 @@ class LlxSystemTest(Detector):
 
     def run(self,*args,**kwargs):
 
-        release=kwargs['LLIUREX_RELEASE']
+        release=str(kwargs['LLIUREX_RELEASE'])
         status=True
         msg=[]
 

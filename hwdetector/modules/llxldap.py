@@ -159,8 +159,8 @@ class LlxLdap(Detector):
         return None
 
     def get_ldap_config(self,*args,**kwargs):
-        release=args[0].lower()
-        server=args[1]
+        release=str(args[0]).lower()
+        server=str(args[1])
         root_mode=self.check_root()
         kw={'stderr':None}
 

@@ -28,7 +28,7 @@ class LlxNetworkTest(Detector):
 
         netinfo=kwargs['NETINFO']
         resolution=kwargs['RESOLVER_INFO']
-        release=kwargs['LLIUREX_RELEASE'].lower()
+        release=str(kwargs['LLIUREX_RELEASE']).lower()
 
         # CHECK NETWORK STATUS
 
