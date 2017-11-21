@@ -151,6 +151,7 @@ def run_analysis(*args,**kwargs):
                 rs = ruleset()
                 try:
                     rs.load_ruleset(fileruleset=kwargs['ruleset'][0],data=fileinfo)
+                    rs.make_tree()
                     rs.make_suggestion()
                 except Exception as e:
                     log.error(e)

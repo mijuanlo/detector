@@ -9,7 +9,7 @@ T_SPLIT='->'
 T_HINT='?'
 T_CHILD='.'
 T_EQUAL='='
-T_NOT='!'
+T_NOT_EQUAL='!='
 T_GT='<'
 T_LT='>'
 T_CONTAIN='%'
@@ -19,9 +19,10 @@ L_EMPTY=['\t',' ']
 class ruleset:
     def __init__(self):
         self.l_spliters=[T_COMMENT,T_SEP,T_SPLIT,T_HINT]
-        self.l_ops=[T_EQUAL,T_NOT]
+        self.l_ops=[T_EQUAL,T_NOT_EQUAL]
         self.rules=[]
         self.data=None
+        self.data_values={}
         pass
 
     def read_until(self,str,until,invert=False,*args,**kwargs):
@@ -110,9 +111,10 @@ class ruleset:
                 search_on=self.data
                 for levelkey in ftmp.split(T_CHILD):
                     if levelkey.lower() not in make_lower_keys(search_on):
-                        raise Exception('Use of key \'{}\' not possible',format(levelkey))
+                        raise Exception('Use of key \'{}\' not possible'.format(levelkey))
                     else:
                         search_on=search_on[levelkey]
+                self.data_values[ftmp]=search_on
                 try:
                     op,vtmp=self.read_until(vtmp,self.l_ops,True)
                 except:
@@ -178,5 +180,39 @@ class ruleset:
         except:
             raise Exception('Wrong file for ruleset')
 
+    def make_tree(self,*args,**kwargs):
+        lfacts=[fact for lfacts in [rule['facts'] for rule in self.rules] for fact in lfacts]
+        count_facts={}
+        for fact in lfacts:
+            count_facts.setdefault(fact['key'],0)
+            count_facts[fact['key']]+=1
+        self.keys_ordered=sorted(count_facts,key=count_facts.get,reverse=True)
+
+
+    def apply_operation(self,fact):
+        clean=lambda x: str(x).replace(' ','').strip()
+        value=clean(fact.get('value'))
+        key=clean(fact.get('key'))
+        op=clean(fact.get('op'))
+
+        ret=False
+        if op == T_EQUAL:
+            if value == clean(self.data_values[key]):
+                ret=True
+        elif op == T_NOT_EQUAL:
+            if value != clean(self.data_values[key]):
+                ret=True
+        return ret
+
+
     def make_suggestion(self,*args,**kwargs):
-        print 'this is a suggestion'
+        for key in self.keys_ordered:
+            for rule in self.rules:
+                for fact in rule['facts']:
+                    if fact.get('key') == key:
+                        #print '{}'.format(fact)
+                        if not self.apply_operation(fact):
+                            print '{} False'.format(fact)
+                        else:
+                            print '{} True'.format(fact)
+
