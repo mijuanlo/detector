@@ -21,6 +21,7 @@ class LlxServices(Detector):
         if [ x for x in dpkg_info['BYNAME'].keys() if x.lower().startswith('apache2') ]:
             has_apache=True
 
+
         # SYSTEMCTL
         sysctl_out=self.execute(run='systemctl --plain --no-legend --no-pager list-units --all -t service')
         info={'BYUNIT':{},'BYLOAD':{},'BYACTIVE':{},'BYSUB':{},'RAW':sysctl_out}
@@ -107,29 +108,44 @@ class LlxServices(Detector):
         output.update({'EPOPTES_INFO':epoptes_info})
 
         # DNSMASQ
-        main_conf=self.compact_files(path=['/etc/dnsmasq.conf','/etc/dnsmasq.d/'])
-        lines=self.file_find_line(main_conf,'conf-dir','=','.+',multiple_result=True)
-        paths=[line[0].split('=')[1].strip() for line in lines]
-        content=main_conf+'\n'+self.compact_files(path=paths)
-        output.update({'DNSMASQ_INFO':{'config':content}})
+        output.update({'DNSMASQ_INFO':None})
+        has_dnsmasq=False
+        if [ x for x in dpkg_info['BYNAME'].keys() if x.lower() == 'dnsmasq' ]:
+            has_dnsmasq=True
+        if has_dnsmasq:
+            main_conf=self.compact_files(path=['/etc/dnsmasq.conf','/etc/dnsmasq.d/'])
+            lines=self.file_find_line(main_conf,'conf-dir','=','.+',multiple_result=True)
+            paths=[line[0].split('=')[1].strip() for line in lines]
+            content=main_conf+'\n'+self.compact_files(path=paths)
+            output.update({'DNSMASQ_INFO':{'config':content}})
 
         # SQUID
-        main_conf=self.uncomment('/etc/squid/squid.conf')
-        lines=self.file_find_line(main_conf,'[^\.]+\.conf"$',multiple_result=True)
-        files = [ re.findall(r'"(\S+)"',f[0])[0] for f in lines]
-        file_contents={}
-        file_contents.setdefault('/etc/squid/squid.conf',main_conf)
-        for file in files:
-            file_contents.setdefault(file,self.uncomment(file))
-        output.update({'SQUID_INFO':{'config':file_contents}})
+        output.setdefault('SQUID_INFO',None)
+        has_squid=False
+        if [ x for x in dpkg_info['BYNAME'].keys() if x.lower().startswith('squid') ]:
+            has_squid=True
+        if has_squid:
+            main_conf=self.uncomment('/etc/squid/squid.conf')
+            lines=self.file_find_line(main_conf,'[^\.]+\.conf"$',multiple_result=True)
+            files = [ re.findall(r'"(\S+)"',f[0])[0] for f in lines]
+            file_contents={}
+            file_contents.setdefault('/etc/squid/squid.conf',main_conf)
+            for file in files:
+                file_contents.setdefault(file,self.uncomment(file))
+            output.update({'SQUID_INFO':{'config':file_contents}})
 
         #SAMBA
-        main_conf=self.uncomment('/etc/samba/smb.conf',comments=[';','#'])
-        lines=self.file_find_line(main_conf,[['include','=','\S+']])
-        paths=[line[0].split('=')[1].strip() for line in lines]
-        content=main_conf+'\n'+self.compact_files(path=paths)
-        resources_local=self.execute(run='smbclient -L localhost -N -g',stderr=None)
-        resources_server=self.execute(run='smbclient -L server -N -g',stderr=None)
-        output.update({'SAMBA_INFO':{'config':content,'resources_local':resources_local,'resources_server':resources_server}})
+        output.update({'SAMBA_INFO':None})
+        has_samba=False
+        if [ x for x in dpkg_info['BYNAME'].keys() if x.lower() == 'samba' ]:
+            has_samba=True
+        if has_samba:
+            main_conf=self.uncomment('/etc/samba/smb.conf',comments=[';','#'])
+            lines=self.file_find_line(main_conf,[['include','=','\S+']])
+            paths=[line[0].split('=')[1].strip() for line in lines]
+            content=main_conf+'\n'+self.compact_files(path=paths)
+            resources_local=self.execute(run='smbclient -L localhost -N -g',stderr=None)
+            resources_server=self.execute(run='smbclient -L server -N -g',stderr=None)
+            output.update({'SAMBA_INFO':{'config':content,'resources_local':resources_local,'resources_server':resources_server}})
 
         return output

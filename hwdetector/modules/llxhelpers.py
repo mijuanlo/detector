@@ -292,9 +292,9 @@ class LlxHelpers(Detector):
                 raise Exception(e)
 
     def list_files(self,*args,**kwargs):
-        path=kwargs.get('path')
-        filter=kwargs.get('filter')
-        regexp=kwargs.get('regexp')
+        path=kwargs.get('path',None)
+        filter=kwargs.get('filter',None)
+        regexp=kwargs.get('regexp',None)
 
         if not path:
             log.error('List files called without \'path\' keyparameter')
