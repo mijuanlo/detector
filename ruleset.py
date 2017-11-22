@@ -10,6 +10,7 @@ T_HINT='?'
 T_CHILD='.'
 T_EQUAL='='
 T_NOT_EQUAL='!='
+T_LIKE='%'
 T_GT='<'
 T_LT='>'
 T_CONTAIN='%'
@@ -51,8 +52,10 @@ class ruleset:
             if ch in L_STR:
                 if not skip_search:
                     skip_character=ch
-                if ch == skip_character:
                     skip_search=not skip_search
+                else:
+                    if ch == skip_character:
+                        skip_search=not skip_search
                 i+=1
                 ret+=ch
                 continue
@@ -87,6 +90,7 @@ class ruleset:
             return v
 
     def make_rule(self,*args,**kwargs):
+        clean=lambda x: str(x).replace('\\','').strip()
         line=args[0]
         line=line.split(T_SPLIT)
         rule={'facts':[],'consequences':[],'hints':[]}
@@ -136,7 +140,7 @@ class ruleset:
             end=True
             while end:
                 ctmp,end=self.read_until(consequences,[T_SEP])
-                lconsequences.append(ctmp)
+                lconsequences.append(clean(ctmp))
 
             for c in lconsequences:
                 if c[0] != c[-1] and c[0] not in L_STR:
@@ -144,7 +148,7 @@ class ruleset:
             rule['consequences']=lconsequences
             hints=hints[1:]
             try:
-                lhints=hints.split(T_SEP)
+                lhints=[clean(h) for h in hints.split(T_SEP)]
                 for h in lhints:
                     if h[0] != h[-1] and h[0] not in L_STR:
                         raise Exception('Hints mus\'t be enclosed with quotes')
@@ -194,25 +198,44 @@ class ruleset:
         value=clean(fact.get('value'))
         key=clean(fact.get('key'))
         op=clean(fact.get('op'))
-
+        data_value=clean(self.data_values[key])
         ret=False
         if op == T_EQUAL:
-            if value == clean(self.data_values[key]):
+            if value == data_value:
                 ret=True
         elif op == T_NOT_EQUAL:
-            if value != clean(self.data_values[key]):
+            if value != data_value:
+                ret=True
+        elif op == T_LIKE:
+            if value in data_value:
                 ret=True
         return ret
 
 
     def make_suggestion(self,*args,**kwargs):
+        def make_banner(st):
+            return '{}\n{}'.format(st,'-'*len(st))
+
+        rules_match=[]
         for key in self.keys_ordered:
             for rule in self.rules:
                 for fact in rule['facts']:
                     if fact.get('key') == key:
                         #print '{}'.format(fact)
                         if not self.apply_operation(fact):
-                            print '{} False'.format(fact)
-                        else:
-                            print '{} True'.format(fact)
+                            #print '{} False'.format(fact)
+                            rules_match.append(rule)
+                        #else:
+                            #print '{} True'.format(fact)
+        if rules_match:
+            print make_banner('Errors detected:')
+        for rule in rules_match:
+            for c in rule['consequences']:
+                print '{}!'.format(c)
+            if rule['hints']:
+                print ''
+                print make_banner('Things that you can do:')
+                for suggestion in rule['hints']:
+                    print '-{}'.format(suggestion)
+                print ''
 
