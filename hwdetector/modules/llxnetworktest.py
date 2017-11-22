@@ -73,14 +73,22 @@ class LlxNetworkTest(Detector):
         if not netinfo['internet'].get('http_get'):
             try:
                 proxydata={}
-                if netinfo['proxy']['http']:
-                    proxydata.setdefault('proxy_http',netinfo['proxy']['http'])
+                if netinfo['proxy']['autoconfig'] and netinfo['proxy']['autoconfig'].get('mode',None) == 'auto':
                     proxydata.setdefault('proxy',True)
-                if netinfo['proxy']['https']:
-                    proxydata.setdefault('proxy_https',netinfo['proxy']['https'])
-                    proxydata.setdefault('proxy',True)
-                if netinfo['proxy']['autoconfig']:
-                    proxydata.setdefault('proxy',True)
+                else:
+                    if 'http' in netinfo['proxy'] and netinfo['proxy']['http']:
+                        proxydata.setdefault('proxy_http',netinfo['proxy']['http'])
+                        proxydata.setdefault('proxy',True)
+                    if 'https' in netinfo['proxy'] and netinfo['proxy']['https']:
+                        proxydata.setdefault('proxy_https',netinfo['proxy']['https'])
+                        proxydata.setdefault('proxy',True)
+                    if 'proxy_http' in netinfo['proxy']:
+                        proxydata.setdefault('proxy_http',netinfo['proxy']['http_proxy'])
+                        proxydata.setdefault('proxy',True)
+                    if 'proxy_https' in netinfo['proxy']:
+                        proxydata.setdefault('proxy_https',netinfo['proxy']['https_proxy'])
+                        proxydata.setdefault('proxy',True)
+
                 netinfo['internet']['http_get']= False
                 if self.get_file_from_net('http://lliurex.net',**proxydata):
                     netinfo['internet']['http_get']= True

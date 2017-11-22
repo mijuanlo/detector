@@ -12,7 +12,7 @@
     <option name="ADD_SOURCE_ROOTS" value="true" />
     <module name="detector" />
     <option name="SCRIPT_NAME" value="$PROJECT_DIR$/valentin" />
-    <option name="PARAMETERS" value="-d info -a valentin-info.tar.gz -s -r valentin.rules" />
+    <option name="PARAMETERS" value="-d info -f valentin-info.tar.gz" />
     <option name="SHOW_COMMAND_LINE" value="false" />
     <option name="EMULATE_TERMINAL" value="false" />
     <method />
