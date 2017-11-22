@@ -30,26 +30,21 @@ class ruleset:
         pass
 
     def read_until(self,str,until,invert=False,*args,**kwargs):
-        i=0
-        ret=''
+        i=-1
+        str=str+' '*10
         skip_search=False
         skip_single=False
         for ch in str:
+            i+=1
             if skip_single:
                 skip_single=False
-                i+=1
-                ret+=ch
                 continue
 
             if ch in L_EMPTY:
-                i+=1
-                ret+=ch
                 continue
 
             if ch == '\\':
                 skip_single=True
-                ret+=ch
-                i+=1
                 continue
 
             if ch in L_STR:
@@ -59,29 +54,20 @@ class ruleset:
                 else:
                     if ch == skip_character:
                         skip_search=not skip_search
-                i+=1
-                ret+=ch
                 continue
 
             if not skip_search:
-                if not invert:
-                    if ch not in until:
-                        i+=1
-                        ret+=ch
-                    else:
-                        break
+                match = [u for u in until if str[i:i+len(u)] == u]
+                if match:
+                    match=True
                 else:
-                    if ch in until:
-                        i+=1
-                        ret+=ch
-                    else:
-                        break
-            else:
-                i+=1
-                ret+=ch
+                    match=False
+                if match != invert:
+                    break
         if skip_search:
             raise Exception('Unbalanced quotes')
-        return (ret.strip(),str[i:].strip())
+
+        return (str[:i].strip(),str[i:].strip())
 
     def clean_quotes(self,*args,**kwargs):
         v=args[0]
@@ -238,7 +224,7 @@ class ruleset:
                 for fact in rule['facts']:
                     if fact.get('key') == key:
                         #print '{}'.format(fact)
-                        if not self.apply_operation(fact):
+                        if self.apply_operation(fact):
                             #print '{} False'.format(fact)
                             rules_match.append(rule)
                         #else:
