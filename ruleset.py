@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 from utils.log import log
 import re
-log.debug("File "+__name__+" loaded")
 
 T_COMMENT='#'
 T_MULTIPLE='*'

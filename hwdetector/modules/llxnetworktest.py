@@ -64,11 +64,13 @@ class LlxNetworkTest(Detector):
         netinfo['internet']={}
         try:
             netinfo['internet'].setdefault('ping',self.check_ping('8.8.8.8'))
-            netinfo['internet'].setdefault('http_get',self.get_file_from_net('http://lliurex.net',False))
+            netinfo['internet']['http_get']= False
+            if self.get_file_from_net('http://lliurex.net',False):
+                netinfo['internet'].setdefault('http_get',True)
         except:
             pass
 
-        if netinfo['internet'].get('http_get',None):
+        if netinfo['internet'].get('http_get'):
             try:
                 proxydata={}
                 if netinfo['proxy']['http']:
@@ -79,7 +81,9 @@ class LlxNetworkTest(Detector):
                     proxydata.setdefault('proxy',True)
                 if netinfo['proxy']['autoconfig']:
                     proxydata.setdefault('proxy',True)
-                netinfo['internet']['http_get']=self.get_file_from_net('http://lliurex.net',**proxydata)
+                netinfo['internet']['http_get']= False
+                if self.get_file_from_net('http://lliurex.net',**proxydata):
+                    netinfo['internet']['http_get']= True
             except:
                 pass
 
