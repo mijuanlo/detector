@@ -4,6 +4,8 @@ import re
 log.debug("File "+__name__+" loaded")
 
 T_COMMENT='#'
+T_MULTIPLE='*'
+T_REPLACE='{}'
 T_SEP=','
 T_SPLIT='->'
 T_HINT='?'
@@ -21,6 +23,7 @@ class ruleset:
     def __init__(self):
         self.l_spliters=[T_COMMENT,T_SEP,T_SPLIT,T_HINT]
         self.l_ops=[T_EQUAL,T_NOT_EQUAL]
+        self.l_template=[T_MULTIPLE,T_REPLACE]
         self.rules=[]
         self.data=None
         self.data_values={}
@@ -114,10 +117,23 @@ class ruleset:
                     raise e
                 search_on=self.data
                 for levelkey in ftmp.split(T_CHILD):
-                    if levelkey.lower() not in make_lower_keys(search_on):
-                        raise Exception('Use of key \'{}\' not possible'.format(levelkey))
+                    lkeys=make_lower_keys(search_on)
+                    if T_MULTIPLE in levelkey:
+                        searched_keys=[x for x in lkeys if levelkey.replace(T_MULTIPLE,'') in x]
+                        if searched_keys:
+                            for r in searched_keys:
+                                new_fact=f.replace(levelkey,r)
+                                new_consequences=consequences.replace(T_REPLACE,r)
+                                self.make_rule('{} -> {} '.format(new_fact,new_consequences))
+                            return
+                        else:
+                            raise Exception('Can\'t apply template \'{}\''.format(levelkey))
                     else:
-                        search_on=search_on[levelkey]
+                        if levelkey.lower() not in lkeys:
+                            raise Exception('Use of key \'{}\' not possible'.format(levelkey))
+                        else:
+                            search_on=search_on[levelkey]
+
                 self.data_values[ftmp]=search_on
                 try:
                     op,vtmp=self.read_until(vtmp,self.l_ops,True)
@@ -195,10 +211,10 @@ class ruleset:
 
     def apply_operation(self,fact):
         clean=lambda x: str(x).replace(' ','').strip()
-        value=clean(fact.get('value'))
+        value=clean(fact.get('value')).lower()
         key=clean(fact.get('key'))
         op=clean(fact.get('op'))
-        data_value=clean(self.data_values[key])
+        data_value=clean(self.data_values[key]).lower()
         ret=False
         if op == T_EQUAL:
             if value == data_value:
@@ -228,7 +244,7 @@ class ruleset:
                         #else:
                             #print '{} True'.format(fact)
         if rules_match:
-            print make_banner('Errors detected:')
+            print make_banner('Detected:')
         for rule in rules_match:
             for c in rule['consequences']:
                 print '{}!'.format(c)

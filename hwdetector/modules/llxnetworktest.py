@@ -69,7 +69,6 @@ class LlxNetworkTest(Detector):
             pass
 
         if netinfo['internet'].get('http_get',None):
-
             try:
                 proxydata={}
                 if netinfo['proxy']['http']:
