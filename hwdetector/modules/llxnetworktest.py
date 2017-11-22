@@ -79,8 +79,10 @@ class LlxNetworkTest(Detector):
                     proxydata.setdefault('proxy',True)
                 if netinfo['proxy']['autoconfig']:
                     proxydata.setdefault('proxy',True)
+                netinfo['internet']['http_get']=self.get_file_from_net('http://lliurex.net',vars(proxydata))
             except:
                 pass
+
 
             #netinfo['name_resolution']=
         # def check_internet(msg,proxy=False):

@@ -77,7 +77,7 @@ class LlxHelpers(Detector):
             proxydata={}
             if kwargs.get('proxy_http',None):
                 proxydata.setdefault('http',kwargs.get(kwargs.get('proxy_http')))
-            if kwargs.get('proxy_http',None):
+            if kwargs.get('proxy_https',None):
                 proxydata.setdefault('https',kwargs.get(kwargs.get('proxy_https')))
 
             if proxydata:

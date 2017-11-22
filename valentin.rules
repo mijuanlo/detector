@@ -1,3 +1,5 @@
 LLIUREX_VERSION = none , NETINFO.proxy.autoconfig.mode = none-> 'This system can\'t be detected as a LliureX system, detection only makes simpler tests'
 NETINFO.eth*.state != up -> 'Interface {} has no link' ? "Maybe the cable is not correctly plugged in!"
 NETINFO.gw.reachable = false -> "The gateway isn't reachable" ? 'Maybe the network hardware is powered off?',"Maybe any cable is not correctly plugged in!"
+NETINFO.internet.ping = false -> "Seems that something blocks ping internet hosts"
+NETINFO.internet.http_get = false -> 'Lliurex.net isn\'t accesible'
