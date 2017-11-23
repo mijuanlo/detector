@@ -283,11 +283,9 @@ class ruleset:
                     if T_REPLACE in c:
                         try:
                             for li in keyval:
-                                c=c.replace(T_REPLACE,str(li))
-                                print '{}!'.format(c)
+                                print '{}!'.format(c.replace(T_REPLACE,str(li)))
                         except:
-                            c=c.replace(T_REPLACE,keyval)
-                            print '{}!'.format(c)
+                            print '{}!'.format(c.replace(T_REPLACE,keyval))
                     else:
                         print '{}!'.format(c)
             if rule['hints']:
