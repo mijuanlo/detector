@@ -281,11 +281,11 @@ class ruleset:
                 keyval=self.data_values.get(key,None)
                 if keyval:
                     if T_REPLACE in c:
-                        if hasattr(keyval,'__iterable__'):
+                        try:
                             for li in keyval:
                                 c.replace(T_REPLACE,str(li))
                                 print '{}!'.format(c)
-                        else:
+                        except:
                             c.replace(T_REPLACE,keyval)
                             print '{}!'.format(c)
                     else:
