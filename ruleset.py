@@ -253,7 +253,7 @@ class ruleset:
             if value in data_value:
                 ret=True
         elif op == T_CAPTURE:
-            if data_value:
+            if self.data_values[key]:
                 return True
         return ret
 
