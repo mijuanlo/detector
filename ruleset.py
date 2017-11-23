@@ -277,14 +277,14 @@ class ruleset:
             print make_banner('Detected:')
         for rule in rules_match:
             for c in rule['consequences']:
-                if self.data_values[c['key']]:
+                if self.data_values[rule['key']]:
                     if T_REPLACE in c:
-                        if hasattr(self.data_values[c['key']],'__iterable__'):
-                            for li in data_values[c['key']]:
+                        if hasattr(self.data_values[rule['key']],'__iterable__'):
+                            for li in self.data_values[rule['key']]:
                                 c.replace(T_REPLACE,str(li))
                                 print '{}!'.format(c)
                         else:
-                            c.replace(T_REPLACE,str(self.data_values[c['key']]))
+                            c.replace(T_REPLACE,str(self.data_values[rule['key']]))
                             print '{}!'.format(c)
                     else:
                         print '{}!'.format(c)
