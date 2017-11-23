@@ -106,7 +106,7 @@ class LlxUsers(Detector):
     def run(self,*args,**kwargs):
         output={}
         LDAP_INFO=kwargs['LDAP_INFO']
-        LLIUREX_RELEASE=kwargs['LLIUREX_RELEASE'].lower()
+        LLIUREX_RELEASE=str(kwargs['LLIUREX_RELEASE']).lower()
         logged_users=self.users_logged()
         myinfo=self.who_i_am()
 

@@ -63,15 +63,15 @@ class LlxNetworkResolver(Detector):
                 if ldap_master_ip:
                     nslist.append(ldap_master_ip)
                 else:
-                    if self.check_root():
-                        # if i'm root and is not set ldap_master_ip, there is an error
-                        # If i'm not root, ldap_master_ip is impossible to get from ldap
-                        self.output['STATUS']=False
+                    # if self.check_root():
+                    #     # if i'm root and is not set ldap_master_ip, there is an error
+                    #     # If i'm not root, ldap_master_ip is impossible to get from ldap
+                    #     self.output['STATUS']=False
 
                     if n4d_vars['MASTER_SERVER_IP'] and n4d_vars['MASTER_SERVER_IP']['value']:
                         nslist.append(n4d_vars['MASTER_SERVER_IP']['value'])
-                    else:
-                        self.output['STATUS']=False
+                    # else:
+                    #     self.output['STATUS']=False
 
             elif ldap_mode == 'independent':
                 pass
@@ -80,14 +80,15 @@ class LlxNetworkResolver(Detector):
             else:
                 pass
         elif release == 'client': # CLIENTS
-            nslist.extend(['pmb','opac','proxy','owncloud'])
+            pass
         else: # OTHERS
             pass
 
+        nslist.extend(['pmb','opac','proxy','owncloud','jclic-aula','cups','share','mirror','preseed','www','ntp','srv','servidor','lliurexlab','error','ipxeboot','admin-center','lliurex-mirror'])
         for ns in nslist:
             r = self.addr_checks(ns)
-            if not r:
-                self.output['STATUS']=False
+            # if not r:
+            #     self.output['STATUS']=False
 
         return {'RESOLVER_INFO': self.output}
 

@@ -8,8 +8,8 @@ log.debug("File "+__name__+" loaded")
 
 class LlxMounts(Detector):
 
-    _PROVIDES = ['MOUNTS_INFO']
-    _NEEDS = ['HELPER_COMPRESS_FILE']
+    _PROVIDES = ['MOUNTS_INFO','FSTAB','DISK_IDS','SERVER_SYNC_INFO']
+    _NEEDS = ['HELPER_COMPRESS_FILE','HELPER_UNCOMMENT','HELPER_EXECUTE']
 
     # def parse_findmnt(self,*args,**kwargs):
     #     ltree=args[0]
@@ -143,9 +143,71 @@ class LlxMounts(Detector):
 
         return output
 
+    def get_server_sync(self,*args,**kwargs):
+        if not os.path.isdir('/net/server-sync'):
+            return 'NO_EXIST'
+        lst=self.execute(run='getfacl -tp -R /net/server-sync/',stderr=None,asroot=True).split('\n')
+        regexp=re.compile('^#\sfile:\s/net/server-sync(\S+)')
+        skip_search=False
+        d={}
+
+        def make_hierarchy(lkeys,value,d={}):
+            if len(lkeys) == 0:
+                return value
+            elif len(lkeys) == 1:
+                return d.setdefault(lkeys[0],value)
+            else:
+                return d.setdefault(lkeys[0],make_hierarchy(lkeys[1:],value,d[lkeys[0]]))
+
+        attrs={}
+        for line in lst:
+            if line == '':
+                lsplit=[li for li in skip_search.split('/') if li != '']
+                if 'mask' in attrs:
+                    attrs['acls']=True
+                else:
+                    attrs['acls']=False
+                d.update(make_hierarchy(lsplit,attrs,d))
+                skip_search=False
+                attrs={}
+                continue
+            if skip_search:
+                fields=[ field for field in line.split(' ') if field != '']
+                attrs.setdefault('__'+fields[0],{})
+                perms={}
+                if fields[0] not in ['mask','other']:
+                    skip_field=0
+                else:
+                    skip_field=1
+                perms.setdefault('perms',fields[2-skip_field])
+                try:
+                    perms.setdefault('defaults',fields[3-skip_field])
+                except:
+                    perms.setdefault('defaults',None)
+
+                attrs['__'+fields[0]].setdefault(fields[1],perms)
+                #attrs[fields[0]][fields[1]].append(perms)
+
+            else:
+                m = re.findall(regexp,line)
+                if m:
+                    skip_search=m[0]
+                    if os.path.isdir('/net/server-sync'+skip_search):
+                        attrs['__is_dir']=True
+                        attrs['__is_file']=False
+                    else:
+                        attrs['__is_dir']=False
+                        attrs['__is_file']=True
+
+        return d
+
+
     def run(self,*args,**kwargs):
         output = {'MOUNTS_INFO':None}
         output['MOUNTS_INFO']=self.get_mounts()
         output['RAW_MOUNTS_INFO']=self.compress_file(file='/proc/self/mounts')
+        output['FSTAB']=self.uncomment('/etc/fstab')
+        output['DISK_IDS']=self.execute(run='blkid',stderr=None)
+        output['SERVER_SYNC_INFO']=self.get_server_sync()
 
         return output

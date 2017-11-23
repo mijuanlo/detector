@@ -34,42 +34,55 @@ class LlxHelpers(Detector):
 
     def uncomment(self,*args,**kwargs):
         r = ''
+        comments=kwargs.get('comments',['#'])
+        creg=[]
+        for c in comments:
+            creg.append(c+'.*')
+        creg='|'.join(creg)
         try:
             is_file = os.path.isfile(args[0])
         except:
             is_file = False
         if is_file:
-            #reg=re.compile('^\s*([^#].+$)')
-            reg=re.compile(r'^(\s*|#.*)*$')
-            with open(args[0],'r') as f:
-                for line in f.readlines():
-                    m=re.match(reg,line)
-                    if not m:
-                        r += line
-                    #m=re.match(reg,line)
-                    #if m:
-                    #    r = r + m.group(1) + "\n"
+            reg=re.compile(r'^(\s*|{})*$'.format(creg))
+            try:
+                with open(args[0],'r') as f:
+                    for line in f.readlines():
+                        m=re.match(reg,line)
+                        if not m:
+                            r += line
+            except:
+                log.warning('Trying to read unreadable file {}'.format(args[0]))
+                r += 'NOT_READABLE'
+
         else:
             if type(args[0]) == type(list()):
                 string = ''.join(str(args[0]))
             else:
                 string=str(args[0])
-            #reg = re.compile('^\s*([^#].+$)')
+
             reg=re.compile(r'^(\s*|#.*)*$')
             for line in string.split("\n"):
                 m=re.match(reg,line)
                 if not m:
                     r += line + "\n"
-                #m = re.match(reg, line)
-                #if m:
-                #    r = r + m.group(1) + "\n"
         return r.strip()
 
     def get_file_from_net(self,*args,**kwargs):
         if not args[0]:
             return None
-        if 'proxy' in kwargs and kwargs['proxy'] == True:
+        if kwargs.get('proxy',None):
+        #if 'proxy' in kwargs and kwargs['proxy'] == True:
             proxy = urllib.ProxyHandler() #use autodetected proxies
+            proxydata={}
+            if kwargs.get('proxy_http',None):
+                proxydata.setdefault('http',kwargs.get(kwargs.get('proxy_http')))
+            if kwargs.get('proxy_https',None):
+                proxydata.setdefault('https',kwargs.get(kwargs.get('proxy_https')))
+
+            if proxydata:
+                proxy = urllib.ProxyHandler(proxydata)
+
             opener = urllib.build_opener(proxy)
             urllib.install_opener(opener)
 
@@ -87,54 +100,60 @@ class LlxHelpers(Detector):
         except Exception as e:
             return None
 
-    def file_find_line(self,*args,**kwargs):
+    def file_find_line(self, content, *args, **kwargs):
 
-        if not (type(args[0]) == type(str()) or type(args[0]) == type(list())):
+        if not (isinstance(content,str) or isinstance(content,list)):
             return None
 
-        is_file=os.path.isfile(args[0])
+        is_file=os.path.isfile(content)
 
-        multimatch = type(args[1]) == type(list())
+        multimatch = isinstance(args[0],list)
 
         if not multimatch:
-            keys = [ k.strip() for k in args[1:] if k and k.strip() ]
+            keys = [k.strip() for k in args if k]
         else:
             keys = []
-            for k_item in args[1]:
-                if type(k_item) == type(list()):
-                    keys.append([k.strip() for k in k_item if k and k.strip()])
+            for k_item in args[0]:
+                if isinstance(k_item,list):
+                    keys.append([k.strip() for k in k_item if k])
 
         if not is_file:
-            if type(args[0]) != type(list()):
-                s = args[0].split("\n")
+            if not isinstance(content,list):
+                s = content.split("\n")
             else:
-                s=args[0]
+                s = content
         else:
-            with open(args[0],'r') as f:
+            with open(content,'r') as f:
                 s=f.readlines()
 
         if not multimatch:
-            r=re.compile('\s+'.join(keys),re.IGNORECASE)
+            r=re.compile('\s*'.join(keys),re.IGNORECASE)
         else:
             r=[]
             for k in keys:
-                r.append(re.compile('\s+'.join(k),re.IGNORECASE))
+                r.append(re.compile('\s*'.join(k),re.IGNORECASE))
         i=0
         output = []
         for line in s:
             if not multimatch:
                 m=re.findall(r,line)
                 if m:
-                    return m
+                    if kwargs.get('multiple_result',False):
+                        output.append(m)
+                    else:
+                        return m
             else:
                 m=[ test for test in [ re.findall(regexp,line) for regexp in r ] if test ]
                 if m:
                     i = i+1
                     output.append(m[0])
                 if i == len(r):
-                    return output
+                    if kwargs.get('multiple_result',False):
+                        output.append(m[0])
+                    else:
+                        return output
 
-        return None
+        return output
 
     def demote(self,*args,**kwargs):
         try:
@@ -265,7 +284,7 @@ class LlxHelpers(Detector):
                     with open(file,'r') as f:
                         return ('__gz__',base64.b64encode(zlib.compress(f.read().strip())))
                 except Exception as e:
-                    raise Exception(e)
+                    return 'NOT_READABLE'
         if string:
             try:
                 return ('__gz__',base64.b64encode(zlib.compress(string.strip())))
@@ -273,11 +292,12 @@ class LlxHelpers(Detector):
                 raise Exception(e)
 
     def list_files(self,*args,**kwargs):
-        path=kwargs.get('path')
-        filter=kwargs.get('filter')
-        regexp=kwargs.get('regexp')
+        path=kwargs.get('path',None)
+        filter=kwargs.get('filter',None)
+        regexp=kwargs.get('regexp',None)
 
         if not path:
+            log.error('List files called without \'path\' keyparameter')
             return None
 
         paths=[]

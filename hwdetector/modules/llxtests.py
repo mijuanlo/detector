@@ -13,9 +13,11 @@ class LlxAlltests(Detector):
         ret=True
         for test in self._NEEDS:
             if kwargs[test]['status']:
-                sys.stderr.write("{}>>>Testing {} was OK!\n".format(kwargs[test]['msg'],test))
+                pass
+                #sys.stderr.write("{}>>>Testing {} was OK!\n".format(kwargs[test]['msg'],test))
             else:
-                sys.stderr.write("{}>>>Testing {} was Failed!\n".format(kwargs[test]['msg'],test))
+                pass
+                #sys.stderr.write("{}>>>Testing {} was Failed!\n".format(kwargs[test]['msg'],test))
                 ret=False
         output={'ALL_TESTS':ret}
         return output

@@ -7,7 +7,7 @@ import re
 log.debug("File "+__name__+" loaded")
 
 class LlxSystemSW(Detector):
-    _PROVIDES = ['DPKG_INFO','APT_SOURCES']
+    _PROVIDES = ['DPKG_INFO','APT_SOURCES','LLIUREX_TIMESTAMP']
     _NEEDS = ['HELPER_EXECUTE','HELPER_COMPACT_FILES']
 
     def run(self,*args,**kwargs):
@@ -38,4 +38,8 @@ class LlxSystemSW(Detector):
 
         output.update({'DPKG_INFO':dpkg_info})
         output.update({'APT_SOURCES':self.compact_files(path=['/etc/apt/sources.list','/etc/apt/sources.list.d/'],regexp=r'[^\.]+\.list$')})
+        try:
+            output.update({'LLIUREX_TIMESTAMP':dpkg_info['BYNAME']['lliurex-version-timestamp'][0]['VERSION']})
+        except:
+            output.update({'LLIUREX_TIMESTAMP':'NOT_AVAILABLE'})
         return output

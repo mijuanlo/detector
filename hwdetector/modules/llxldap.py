@@ -159,8 +159,8 @@ class LlxLdap(Detector):
         return None
 
     def get_ldap_config(self,*args,**kwargs):
-        release=args[0].lower()
-        server=args[1]
+        release=str(args[0]).lower()
+        server=str(args[1])
         root_mode=self.check_root()
         kw={'stderr':None}
 
@@ -262,7 +262,7 @@ class LlxLdap(Detector):
                 mode='INDEPENDENT'
                 netinfo=kwargs['NETINFO']
                 if netinfo:
-                    aliased_interfaces = [ k for k in netinfo if 'nalias' in netinfo[k] and netinfo[k]['nalias'] > 0 ]
+                    aliased_interfaces = [ k for k in netinfo if type(netinfo[k]) == type(dict()) and 'nalias' in netinfo[k] and netinfo[k]['nalias'] > 0 ]
                     for i in aliased_interfaces:
                         for n in range(netinfo[i]['nalias']):
                             if 'alias'+str(n+1)+'_ifaddr' in netinfo[i]:

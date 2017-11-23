@@ -10,6 +10,7 @@ import json
 import argparse
 import zlib
 import base64
+from ruleset import ruleset
 
 def run_in_debug():
     gettrace=getattr(sys,'gettrace',None)
@@ -36,7 +37,7 @@ def indent_var(st=u'',var={},indent=0):
                 st += u'{}{}'.format(indentation,replaced)
             else:
                 for x in sorted(var):
-                    st += u'{}'.format(indent_var(var=x,indent=indent+1))
+                    st += u'{}\n'.format(indent_var(var=x,indent=indent+1))
         elif type(var) == type(str()):
             var = var.encode('utf-8')
             replaced = var.replace(u'\n',indentation+u'\n'+indentation)
@@ -117,7 +118,7 @@ def run_detection(*args,**kwargs):
     return ret
 
 def load_file(*args,**kwargs):
-    if 'analyze_file' in kwargs:
+    if kwargs.get('analyze_file',None):
         filename = kwargs['analyze_file'][0]
     else:
         return False
@@ -145,10 +146,20 @@ def run_analysis(*args,**kwargs):
     fileinfo=load_file(*args,**kwargs)
     if fileinfo:
         fileinfo = json.loads(fileinfo)
-        if kwargs.get('to_stdout'):
-            pr=indent_var(var=fileinfo)
-            sys.stdout.write(pr.encode('utf-8'))
-            sys.stderr.write('\n')
+        if kwargs.get('suggest',None):
+            if kwargs.get('ruleset',None):
+                rs = ruleset()
+                try:
+                    rs.load_ruleset(fileruleset=kwargs['ruleset'][0],data=fileinfo)
+                    rs.make_tree()
+                    rs.make_suggestion()
+                except Exception as e:
+                    log.error(e)
+        else:
+            if kwargs.get('to_stdout'):
+                pr=indent_var(var=fileinfo)
+                sys.stdout.write(pr.encode('utf-8'))
+                sys.stderr.write('\n')
         return True
 
 if __name__ == '__main__':
@@ -160,6 +171,8 @@ if __name__ == '__main__':
         parser.add_argument('-f','--with-file',metavar='filename',nargs='?',help='Filename for results file (default valentin-info-(date).tar.gz')
         parser.add_argument('-o','--to-stdout',action='store_const',help='Output results to stdout',const=True)
         parser.add_argument('-a','--analyze-file',metavar='filename',nargs=1,help='Filename to analyze')
+        parser.add_argument('-s','--suggest',action='store_const',help='Suggest actions to repair system',const=True)
+        parser.add_argument('-r','--ruleset',metavar='filename',nargs=1,help='Load ruleset when suggest user actions')
         args = parser.parse_args()
 
         if not args.debug_level:
@@ -180,7 +193,7 @@ if __name__ == '__main__':
         kw=vars(args)
         kw.update({'fname':fname})
 
-        if args.analyze_file:
+        if args.analyze_file or args.suggest:
             ret=run_analysis(**vars(args))
         else:
             ret=run_detection(**vars(args))
