@@ -4,6 +4,7 @@ import re
 
 T_COMMENT='#'
 T_MULTIPLE='*'
+T_CAPTURE='()'
 T_REPLACE='{}'
 T_SEP=','
 T_SPLIT='->'
@@ -21,52 +22,86 @@ L_EMPTY=['\t',' ']
 class ruleset:
     def __init__(self):
         self.l_spliters=[T_COMMENT,T_SEP,T_SPLIT,T_HINT]
-        self.l_ops=[T_EQUAL,T_NOT_EQUAL]
+        self.l_ops=[T_EQUAL,T_NOT_EQUAL,T_CAPTURE]
         self.l_template=[T_MULTIPLE,T_REPLACE]
         self.rules=[]
         self.data=None
         self.data_values={}
         pass
 
-    def read_until(self,str,until,invert=False,*args,**kwargs):
-        i=-1
-        str=str+' '*10
-        skip_search=False
-        skip_single=False
-        for ch in str:
-            i+=1
-            if skip_single:
-                skip_single=False
-                continue
+    def read_until(self,st,until,invert=False,*args,**kwargs):
+        def first_in_until(st,combined):
+            idxfirst=[]
+            for t in combined:
+                i=-1
+                try:
+                    i=st.index(t,i+1)
+                except:
+                    pass
+                if i == -1:
+                    i=9999
+                idxfirst.append(i)
+            midxfirst=min(idxfirst)
+            if combined[idxfirst.index(midxfirst)] in until:
+                return True
+            return False
 
-            if ch in L_EMPTY:
-                continue
+        idxs=[]
+        start=-1
+        if not first_in_until(st,L_STR+until):
+            for s in L_STR:
+                i=-1
+                tmp=-1
+                double=True
+                try:
+                    while True:
+                        if double and first_in_until(st[tmp+1:],L_STR+until):
+                            idxs.append(i)
+                            break
+                        tmp=st.index(s,tmp+1)
+                        if st[tmp-1]!='\\':
+                            double=not double
+                            i=tmp
+                except Exception as e:
+                    if not double:
+                        #raise Exception('Unbalanced quotes')
+                        i=9999
+                    idxs.append(i)
 
-            if ch == '\\':
-                skip_single=True
-                continue
-
-            if ch in L_STR:
-                if not skip_search:
-                    skip_character=ch
-                    skip_search=not skip_search
+            start=min(idxs)
+            if start==-1:
+                start=max(idxs)
+        idx=[]
+        if invert:
+            for u in until:
+                if start != -1:
+                    i=start+1
                 else:
-                    if ch == skip_character:
-                        skip_search=not skip_search
-                continue
-
-            if not skip_search:
-                match = [u for u in until if str[i:i+len(u)] == u]
-                if match:
-                    match=True
+                    i=-1
+                try:
+                    while True:
+                        i=st.index(u,i+1)
+                except:
+                    if i == -1:
+                        i=len(st)
+                idx.append(i)
+        else:
+            for u in until:
+                if start != -1:
+                    i=start+1
                 else:
-                    match=False
-                if match != invert:
-                    break
-        if skip_search:
-            raise Exception('Unbalanced quotes')
+                    i=-1
+                try:
+                    i=st.index(u,i+1)
+                except:
+                    if i == -1:
+                        i=len(st)
+                idx.append(i)
+        midx=min(idx)
+        if invert:
+            midx+=len(until[idx.index(midx)])
+        return (st[:midx].strip(),st[midx:].strip())
 
-        return (str[:i].strip(),str[i:].strip())
 
     def clean_quotes(self,*args,**kwargs):
         v=args[0]
@@ -93,7 +128,6 @@ class ruleset:
         if facts.strip() == '':
             raise Exception('Empty facts')
         fact_list=facts.split(T_SEP)
-        make_lower_keys = lambda d: map(lambda y : y.lower(), d.keys())
         for f in fact_list:
             if f:
                 try:
@@ -101,10 +135,13 @@ class ruleset:
                 except Exception as e:
                     raise e
                 search_on=self.data
+                fact_key=[]
                 for levelkey in ftmp.split(T_CHILD):
-                    lkeys=make_lower_keys(search_on)
+                    for lkey in search_on.keys():
+                        if lkey != levelkey and lkey.lower() == levelkey.lower():
+                            levelkey=lkey
                     if T_MULTIPLE in levelkey:
-                        searched_keys=[x for x in lkeys if levelkey.replace(T_MULTIPLE,'') in x]
+                        searched_keys=[x for x in search_on.keys() if levelkey.replace(T_MULTIPLE,'') in x]
                         if searched_keys:
                             for r in searched_keys:
                                 new_fact=f.replace(levelkey,r)
@@ -114,11 +151,14 @@ class ruleset:
                         else:
                             raise Exception('Can\'t apply template \'{}\''.format(levelkey))
                     else:
-                        if levelkey.lower() not in lkeys:
+                        if levelkey not in search_on.keys():
                             raise Exception('Use of key \'{}\' not possible'.format(levelkey))
-                        else:
-                            search_on=search_on[levelkey]
-
+                        fact_key.append(levelkey)
+                        search_on=search_on[levelkey]
+                #True key
+                #fact_key='.'.join(fact_key)
+                #self.data_values[fact_key]=search_on
+                #lower key
                 self.data_values[ftmp]=search_on
                 try:
                     op,vtmp=self.read_until(vtmp,self.l_ops,True)
@@ -129,8 +169,10 @@ class ruleset:
                 if op not in self.l_ops:
                     raise Exception('Wrong op')
                 vtmp,end=self.read_until(vtmp,self.l_ops+self.l_spliters)
-                if vtmp == '':
+                if vtmp == '' and op != T_CAPTURE:
                     raise Exception('Wrong value')
+                if vtmp and op == T_CAPTURE:
+                    self.data.setdefault(vtmp,search_on)
                 rule['facts'].append({'key':ftmp,'op':op,'value':vtmp})
         try:
             try:
@@ -210,6 +252,9 @@ class ruleset:
         elif op == T_LIKE:
             if value in data_value:
                 ret=True
+        elif op == T_CAPTURE:
+            if data_value:
+                return True
         return ret
 
 
@@ -232,7 +277,17 @@ class ruleset:
             print make_banner('Detected:')
         for rule in rules_match:
             for c in rule['consequences']:
-                print '{}!'.format(c)
+                if self.data_values[c['key']]:
+                    if T_REPLACE in c:
+                        if hasattr(self.data_values[c['key']],'__iterable__'):
+                            for li in data_values[c['key']]:
+                                c.replace(T_REPLACE,str(li))
+                                print '{}!'.format(c)
+                        else:
+                            c.replace(T_REPLACE,str(self.data_values[c['key']]))
+                            print '{}!'.format(c)
+                    else:
+                        print '{}!'.format(c)
             if rule['hints']:
                 print ''
                 print make_banner('Things that you can do:')

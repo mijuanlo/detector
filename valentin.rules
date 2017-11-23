@@ -3,3 +3,4 @@ NETINFO.eth*.state != up -> 'Interface {} has no link' ? "Maybe the cable is not
 NETINFO.gw.reachable = false -> "The gateway isn't reachable" ? 'Maybe the network hardware is powered off?',"Maybe any cable is not correctly plugged in!"
 NETINFO.internet.ping = false -> "Seems that something blocks ping internet hosts"
 NETINFO.internet.http_get = false -> 'Lliurex.net isn\'t accesible'
+RESOLVER_INFO.unreachable () _unreachable -> '{} is not reachable'

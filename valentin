@@ -37,7 +37,7 @@ def indent_var(st=u'',var={},indent=0):
                 st += u'{}{}'.format(indentation,replaced)
             else:
                 for x in sorted(var):
-                    st += u'{}'.format(indent_var(var=x,indent=indent+1))
+                    st += u'{}\n'.format(indent_var(var=x,indent=indent+1))
         elif type(var) == type(str()):
             var = var.encode('utf-8')
             replaced = var.replace(u'\n',indentation+u'\n'+indentation)
