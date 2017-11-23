@@ -283,10 +283,10 @@ class ruleset:
                     if T_REPLACE in c:
                         try:
                             for li in keyval:
-                                c.replace(T_REPLACE,str(li))
+                                c=c.replace(T_REPLACE,str(li))
                                 print '{}!'.format(c)
                         except:
-                            c.replace(T_REPLACE,keyval)
+                            c=c.replace(T_REPLACE,keyval)
                             print '{}!'.format(c)
                     else:
                         print '{}!'.format(c)
