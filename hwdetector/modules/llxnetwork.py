@@ -185,7 +185,11 @@ class LlxNetwork(Detector):
                 except:
                     pass
         output['routes']=rt
-        output['gw']=rt['names']['default']
+        if rt:
+            output['gw']=rt['names']['default']
+        else:
+            output['gw']=None
+
         resolv=self.get_resolver()
         output['resolver']=resolv
 
