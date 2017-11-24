@@ -91,7 +91,7 @@ def run_detection(*args,**kwargs):
     #hwd.all_plugins_are_needed=True
     if not run_in_debug():
         log.info('USING MAX_RUNNING_TIME !!!')
-        hwd.MAX_RUNNING_TIME = 10
+        hwd.MAX_RUNNING_TIME = 30
 
     #hwd.fake_capabilities={'IAMGOD':'yes'}
 
