@@ -144,9 +144,10 @@ class ruleset:
                         searched_keys=[x for x in search_on.keys() if levelkey.replace(T_MULTIPLE,'') in x]
                         if searched_keys:
                             for r in searched_keys:
-                                new_fact=f.replace(levelkey,r)
-                                new_consequences=consequences.replace(T_REPLACE,r)
+                                new_fact=f.replace(levelkey,r).strip()
+                                new_consequences=consequences.replace(T_REPLACE,r).strip()
                                 self.make_rule('{} -> {} '.format(new_fact,new_consequences))
+                                log.debug('Rule repetat: Unrolling to: {} -> {}'.format(new_fact,new_consequences))
                             return
                         else:
                             raise Exception('Can\'t apply template \'{}\''.format(levelkey))
@@ -172,6 +173,7 @@ class ruleset:
                 if vtmp == '' and op != T_CAPTURE:
                     raise Exception('Wrong value')
                 if vtmp and op == T_CAPTURE:
+                    log.debug('Capturing {} to {} '.format(search_on,vtmp))
                     self.data.setdefault(vtmp,search_on)
                 rule['facts'].append({'key':ftmp,'op':op,'value':vtmp})
         try:
@@ -233,7 +235,9 @@ class ruleset:
         for fact in lfacts:
             count_facts.setdefault(fact['key'],0)
             count_facts[fact['key']]+=1
+            log.debug('Ordering key {} = {}'.format(fact['key'],count_facts[fact['key']]))
         self.keys_ordered=sorted(count_facts,key=count_facts.get,reverse=True)
+        log.debug('Tree keys ordered: {}'.format(','.join(self.keys_ordered)))
 
 
     def apply_operation(self,fact):
@@ -267,12 +271,9 @@ class ruleset:
             for rule in self.rules:
                 for fact in rule['facts']:
                     if fact.get('key') == key:
-                        #print '{}'.format(fact)
                         if self.apply_operation(fact):
-                            #print '{} False'.format(fact)
                             rules_match.append(rule)
-                        #else:
-                            #print '{} True'.format(fact)
+                            log.debug('Rule matched: {}'.format(rule))
         if rules_match:
             print make_banner('Detected:')
         for rule in rules_match:
