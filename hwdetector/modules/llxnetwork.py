@@ -13,7 +13,7 @@ class LlxNetwork(Detector):
     _NEEDS=['HELPER_UNCOMMENT',"HELPER_GET_FILE_FROM_NET","HELPER_EXECUTE",'HELPER_COMPACT_FILES']
 
     def get_routes(self,*args,**kwargs):
-        routes = self.execute(run="ip r",stderr=None)\
+        routes = self.execute(run="ip r",stderr=None)
         if not routes:
             return None
         else:
