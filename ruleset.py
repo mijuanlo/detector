@@ -302,8 +302,9 @@ class ruleset:
                                 print '{}!'.format(c.replace(T_REPLACE,str(li)))
                         except:
                             print '{}!'.format(c.replace(T_REPLACE,keyval))
-                    else:
-                        print '{}!'.format(c)
+                else:
+                    print '{}!'.format(c)
+
             if rule['hints']:
                 print ''
                 print make_banner('Things that you can do:')
