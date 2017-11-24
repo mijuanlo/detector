@@ -309,7 +309,7 @@ class ruleset:
                     out['c'].append('{}!'.format(c))
 
             if rule['hints']:
-                out['h'].append('\n'+make_banner('Things that you can do:')
+                out['h'].append('\n'+make_banner('Things that you can do:'))
                 for suggestion in rule['hints']:
                     out['h'].append('-{}'.format(suggestion)
                 out['h'].append('\n')
