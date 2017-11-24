@@ -178,11 +178,12 @@ class LlxNetwork(Detector):
         output=self.get_ifaces()
 
         for dev in output:
-            ip=output[dev]['ifaddr'].split('/')[0]
-            try:
-                output[dev]['net']=rt['names']['byiface'][ip]
-            except:
-                pass
+            if 'ifaddr' in output[dev] and output[dev]['ifaddr']:
+                ip=output[dev]['ifaddr'].split('/')[0]
+                try:
+                    output[dev]['net']=rt['names']['byiface'][ip]
+                except:
+                    pass
         output['routes']=rt
         output['gw']=rt['names']['default']
         resolv=self.get_resolver()
