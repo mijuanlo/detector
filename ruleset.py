@@ -311,7 +311,7 @@ class ruleset:
             if rule['hints']:
                 out['h'].append('\n'+make_banner('Things that you can do:'))
                 for suggestion in rule['hints']:
-                    out['h'].append('-{}'.format(suggestion)
+                    out['h'].append('-{}'.format(suggestion))
                 out['h'].append('\n')
 
         print out['banner']
