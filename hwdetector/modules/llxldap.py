@@ -218,7 +218,11 @@ class LlxLdap(Detector):
                 localldap=True
         if not server:
             ip_server=self.check_ns('server')
-            ip_server2=kwargs['NETINFO']['gw']['via']
+            try:
+                ip_server2=kwargs['NETINFO']['gw']['via']
+            except:
+                ip_server2=None
+
             if not ip_server:
                 log.error("'server' not resolvable")
                 if ip_server2:
