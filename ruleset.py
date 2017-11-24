@@ -289,8 +289,11 @@ class ruleset:
                         if self.apply_operation(fact):
                             rules_match.append(rule)
                             log.debug('Rule matched: {}'.format(rule))
+
+        out={'banner':None,'c':[],'h':[]}
         if rules_match:
-            print make_banner('Detected:')
+            out['banner']=make_banner('Detected:')
+
         for rule in rules_match:
             for c in rule['consequences']:
                 key=rule['facts'][0].get('key','None')
@@ -299,16 +302,20 @@ class ruleset:
                     if T_REPLACE in c:
                         try:
                             for li in keyval:
-                                print '{}!'.format(c.replace(T_REPLACE,str(li)))
+                                out['c'].append('{}!'.format(c.replace(T_REPLACE,str(li))))
                         except:
-                            print '{}!'.format(c.replace(T_REPLACE,keyval))
+                            out['c'].append('{}!'.format(c.replace(T_REPLACE,keyval)))
                 else:
-                    print '{}!'.format(c)
+                    out['c'].append('{}!'.format(c))
 
             if rule['hints']:
-                print ''
-                print make_banner('Things that you can do:')
+                out['h'].append('\n'+make_banner('Things that you can do:')
                 for suggestion in rule['hints']:
-                    print '-{}'.format(suggestion)
-                print ''
+                    out['h'].append('-{}'.format(suggestion)
+                out['h'].append('\n')
 
+        print out['banner']
+        for c in out['c']:
+            print c
+        for h in out['h']:
+            print h
