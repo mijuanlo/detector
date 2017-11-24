@@ -16,13 +16,14 @@ T_LIKE='%'
 T_GT='<'
 T_LT='>'
 T_CONTAIN='%'
+T_EXISTENCE='@'
 L_STR=['\'','"']
 L_EMPTY=['\t',' ']
 
 class ruleset:
     def __init__(self):
         self.l_spliters=[T_COMMENT,T_SEP,T_SPLIT,T_HINT]
-        self.l_ops=[T_EQUAL,T_NOT_EQUAL,T_CAPTURE]
+        self.l_ops=[T_EQUAL,T_NOT_EQUAL,T_CAPTURE,T_EXISTENCE]
         self.l_template=[T_MULTIPLE,T_REPLACE]
         self.rules=[]
         self.data=None
@@ -259,6 +260,20 @@ class ruleset:
         elif op == T_CAPTURE:
             if self.data_values[key]:
                 return True
+        elif op == T_EXISTENCE:
+            try:
+                if self.data_values[key]:
+                    ret=True
+                else:
+                    ret=False
+            except:
+                ret=False
+
+            if value == 'exist':
+                return ret
+            else:
+                return not ret
+
         return ret
 
 
