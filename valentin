@@ -172,7 +172,8 @@ if __name__ == '__main__':
         args = parser.parse_args()
 
         if not args.debug_level:
-            log.set_level(logging.WARNING)
+            #log.set_level(logging.WARNING)
+            log.disable()
         else:
             levels={'debug':logging.DEBUG,'info':logging.INFO,'warning':logging.WARNING,'error':logging.ERROR}
             log.set_level(levels[args.debug_level.lower()])
