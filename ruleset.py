@@ -325,3 +325,6 @@ class ruleset:
             print '\n'+make_banner('Things that you can do:')
             for h in out['h']:
                 print h
+        else:
+            if out['c']:
+                print '\n'+make_banner('You don\'t need to do any actions')

@@ -115,8 +115,8 @@ def run_detection(*args,**kwargs):
     return (ret,hwd.capabilities)
 
 def load_file(*args,**kwargs):
-    if kwargs.get('analyze_file',None):
-        filename = kwargs['analyze_file'][0]
+    if kwargs.get('fname',None):
+        filename = kwargs['fname']
     else:
         return False
     if os.path.exists(filename):
@@ -191,6 +191,8 @@ if __name__ == '__main__':
             kw.update({'fname':fname})
 
         if args.analyze_file:
+            fname=args.analyze_file[0]
+            kw.update({'fname':fname})
             capabilities=load_file(**kw)
             log.info("File {} loaded".format(fname))
             if capabilities:
