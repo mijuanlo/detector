@@ -305,6 +305,8 @@ class ruleset:
                                 out['c'].append('-{}!'.format(c.replace(T_REPLACE,str(li))))
                         except:
                             out['c'].append('-{}!'.format(c.replace(T_REPLACE,keyval)))
+                    else:
+                        out['c'].append('-{}!'.format(c))
                 else:
                     out['c'].append('-{}!'.format(c))
 
@@ -312,9 +314,11 @@ class ruleset:
                 for suggestion in rule['hints']:
                     out['h'].append('-{}'.format(suggestion))
 
-        print out['banner']
-        for c in out['c']:
-            print c
-        print '\n'+make_banner('Things that you can do:')
-        for h in out['h']:
-            print h
+        if out['c']:
+            print out['banner']
+            for c in out['c']:
+                print c
+        if out['h']:
+            print '\n'+make_banner('Things that you can do:')
+            for h in out['h']:
+                print h
