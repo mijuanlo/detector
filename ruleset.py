@@ -138,6 +138,8 @@ class ruleset:
                 search_on=self.data
                 fact_key=[]
                 for levelkey in ftmp.split(T_CHILD):
+                    if not isinstance(search_on,dict):
+                        raise Exception('Use of key \'{}\' isn\'t permitted, only dict keys are matched in rules')
                     for lkey in search_on.keys():
                         if lkey != levelkey and lkey.lower() == levelkey.lower():
                             levelkey=lkey
