@@ -318,6 +318,7 @@ class ruleset:
             print out['banner']
             for c in out['c']:
                 print c
+
         if out['h']:
             print '\n'+make_banner('Things that you can do:')
             for h in out['h']:

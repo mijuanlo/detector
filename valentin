@@ -212,14 +212,14 @@ if __name__ == '__main__':
 
         kw.update({'capabilities':capabilities})
 
-        if ret:
-            if args.to_stdout:
-                pr=indent_var(var=capabilities)
-                sys.stdout.write(pr.encode('utf-8'))
-                sys.stderr.write('\n')
 
-            if args.suggest:
-                ret=run_analysis(**kw)
+        if args.to_stdout:
+            pr=indent_var(var=capabilities)
+            sys.stdout.write(pr.encode('utf-8'))
+            sys.stderr.write('\n')
+
+        if args.suggest:
+            ret=run_analysis(**kw)
 
 
         if ret:
