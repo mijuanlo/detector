@@ -385,7 +385,7 @@ class ruleset:
                     if clean:
                         del self.rules[rule_idx]
                         #break
-                        rule_idx+=1
+                        #rule_idx+=1
                     elif clean==False:
                         #break
                         rule_idx+=1
