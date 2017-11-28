@@ -228,8 +228,8 @@ class ruleset:
                 self.data_values[ftmp]=value
 
                 if vtmp and op == T_CAPTURE:
-                    log.debug('Capturing {} to {} '.format(search_on,vtmp))
-                    self.data.setdefault(vtmp,search_on)
+                    log.debug('Capturing {} to {} '.format(value,vtmp))
+                    self.data.setdefault(vtmp,value)
 
                 rule['facts'].append({'key':ftmp,'op':op,'value':vtmp})
         try:
@@ -369,9 +369,12 @@ class ruleset:
                                 break
                     if clean:
                         del self.rules[rule_idx]
-                        break
+                        #break
+                        rule_idx+=1
                     elif clean==False:
-                        break
+                        #break
+                        rule_idx+=1
+                        pass
 
 
         out={'banner':None,'c':[],'h':[]}
