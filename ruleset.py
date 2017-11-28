@@ -253,11 +253,19 @@ class ruleset:
             rule['consequences']=lconsequences
             hints=hints[1:]
             try:
-                lhints=[clean(h) for h in hints.split(T_SEP)]
-                for h in lhints:
-                    if h[0] != h[-1] and h[0] not in L_STR:
-                        raise Exception('Hints mus\'t be enclosed with quotes')
-                rule['hints']=lhints
+                if hints:
+                    end=True
+                    lhints=[]
+                    while end:
+                        htmp,end=self.read_until(hints,[T_SEP])
+                        lhints.append(clean(htmp))
+                        hints=end[1:]
+
+                    #lhints=[clean(h) for h in hints.split(T_SEP)]
+                    for h in lhints:
+                        if h[0] != h[-1] and h[0] not in L_STR:
+                            raise Exception('Hints mus\'t be enclosed with quotes')
+                    rule['hints']=lhints
             except:
                 pass #hints are optional
             for k in ['facts','consequences','hints']:
