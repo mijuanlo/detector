@@ -14,3 +14,4 @@ LLIUREX_RELEASE = server , SYSTEMCTL_INFO.byunit.dnsmasq.sub != running -> 'This
 LLIUREX_RELEASE = server , SYSTEMCTL_INFO.byunit.dnsmasq.sub = running, PROCESS_INFO.full_cmd~dnsmasq @ not_exist-> 'dnsmasq not detected in process list' ? "Try restart the dnsmasq service with sysctl or view logfile"
 LLIUREX_RELEASE = server , SYSTEMCTL_INFO.byunit.slapd.sub != running -> 'This server must have the slapd service running' ? "Try restart slapd with sysctl or view logfile"
 LLIUREX_RELEASE = server , SYSTEMCTL_INFO.byunit.slapd.sub = running, PROCESS_INFO.full_cmd~slapd @ not_exist -> 'slapd not detected in process list' ? "Try restart the slapd service with sysctl or view logfile"
+USER_TEST.*.perm_ok != true -> 'User {} has wrong permissions into /home/{}'

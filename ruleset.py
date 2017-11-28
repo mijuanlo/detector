@@ -137,8 +137,11 @@ class ruleset:
                         for r in searched_keys:
                             new_fact=fact.replace(levelkey,r).strip()
                             new_consequences=consequences.replace(T_REPLACE,r).strip()
-                            self.make_rule('{} -> {} '.format(new_fact,new_consequences))
-                            log.debug('Rule repetat: Unrolling to: {} -> {}'.format(new_fact,new_consequences))
+                            try:
+                                self.make_rule('{} -> {} '.format(new_fact,new_consequences))
+                                log.debug('Rule repetat: Unrolling to: {} -> {}'.format(new_fact,new_consequences))
+                            except:
+                                log.debug('Rule repeat: Cannot unroll to: {} -> {}'.format(new_fact,new_consequences))
                         return None
                     else:
                         raise Exception('Can\'t apply template \'{}\''.format(levelkey))
