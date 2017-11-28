@@ -14,6 +14,7 @@ T_CHILD='.'
 T_EQUAL='='
 T_NOT_EQUAL='!='
 T_LIKE='%'
+T_NOT_LIKE='!%'
 T_GT='<'
 T_LT='>'
 T_CONTAIN='%'
@@ -24,7 +25,7 @@ L_EMPTY=['\t',' ']
 class ruleset:
     def __init__(self):
         self.l_spliters=[T_COMMENT,T_SEP,T_SPLIT,T_HINT]
-        self.l_ops=[T_EQUAL,T_NOT_EQUAL,T_CAPTURE,T_EXISTENCE,T_LIKE,T_LT,T_GT]
+        self.l_ops=[T_EQUAL,T_NOT_EQUAL,T_CAPTURE,T_EXISTENCE,T_LIKE,T_NOT_LIKE,T_LT,T_GT]
         self.l_template=[T_MULTIPLE,T_REPLACE]
         self.rules=[]
         self.data=None
@@ -329,6 +330,9 @@ class ruleset:
                 ret=True
         elif op == T_LIKE:
             if value in data_value:
+                ret=True
+        elif op == T_NOT_LIKE:
+            if value not in data_value:
                 ret=True
         elif op == T_CAPTURE:
             if self.data_values[key]:

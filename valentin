@@ -164,6 +164,7 @@ if __name__ == '__main__':
 
         parser.add_argument('-f','--with-file',metavar='filename',nargs='?',help='Filename for results file (default valentin-info-(date).tar.gz')
         parser.add_argument('-o','--to-stdout',action='store_const',help='Output results to stdout',const=True)
+        parser.add_argument('-w','--to-stdout-raw',action='store_const',help='Output results to stdout in json format',const=True)
 
         parser.add_argument('-a','--analyze-file',metavar='filename',nargs=1,help='Filename to analyze')
 
@@ -215,8 +216,11 @@ if __name__ == '__main__':
         kw.update({'capabilities':capabilities})
 
 
-        if args.to_stdout:
-            pr=indent_var(var=capabilities)
+        if args.to_stdout or args.to_stdout_raw:
+            if args.to_stdout:
+                pr=indent_var(var=capabilities)
+            else:
+                pr=json.dumps(capabilities,indent=4,separators=(',',':'),sort_keys=True)
             sys.stdout.write(pr.encode('utf-8'))
             sys.stderr.write('\n')
 
