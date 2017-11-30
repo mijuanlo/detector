@@ -13,33 +13,37 @@ class LlxNetwork(Detector):
     _NEEDS=['HELPER_UNCOMMENT',"HELPER_GET_FILE_FROM_NET","HELPER_EXECUTE",'HELPER_COMPACT_FILES']
 
     def get_routes(self,*args,**kwargs):
-        routes = self.execute(run="ip r",stderr=None).split("\n")
-        rt = {}
-        rt['names'] = {}
-        rt['names']['bynet'] = {}
-        rt['names']['byiface'] = {}
-        for line in routes:
-            if 'default' in line:
-                m = re.search(r'default via (?P<via>\S+) dev (?P<dev>\w+)', line)
-                d = m.groupdict()
-                if not d['dev'] in rt:
-                    rt[d['dev']] = []
-                rt[d['dev']].append({'src': '0.0.0.0', 'net': d['via']})
-                rt['names']['default'] = {'via': d['via'], 'dev': d['dev']}
-                rt['names']['gw'] = d['via']
-            else:
-                m = re.search(
-                    r'(?P<net>\S+) dev (?P<dev>\w+)\s+(?:proto kernel)?\s+scope link\s+(?:metric \d+)?\s+(?:src (?P<src>\S+))?',
-                    line)
-                d = m.groupdict()
-                if not 'src' in d or d['src'] == None:
-                    d['src'] = 'unknown'
-                if not d['dev'] in rt:
-                    rt[d['dev']] = []
-                rt[d['dev']].append({'src': d['src'], 'net': d['net']})
-                rt['names']['byiface'][d['src']] = d['net']
-                rt['names']['bynet'][d['net']] = d['src']
-        return rt
+        routes = self.execute(run="ip r",stderr=None)
+        if not routes:
+            return None
+        else:
+            routes=routes.split("\n")
+            rt = {}
+            rt['names'] = {}
+            rt['names']['bynet'] = {}
+            rt['names']['byiface'] = {}
+            for line in routes:
+                if 'default' in line:
+                    m = re.search(r'default via (?P<via>\S+) dev (?P<dev>\w+)', line)
+                    d = m.groupdict()
+                    if not d['dev'] in rt:
+                        rt[d['dev']] = []
+                    rt[d['dev']].append({'src': '0.0.0.0', 'net': d['via']})
+                    rt['names']['default'] = {'via': d['via'], 'dev': d['dev']}
+                    rt['names']['gw'] = d['via']
+                else:
+                    m = re.search(
+                        r'(?P<net>\S+) dev (?P<dev>\w+)\s+(?:proto kernel)?\s+scope link\s+(?:metric \d+)?\s+(?:src (?P<src>\S+))?',
+                        line)
+                    d = m.groupdict()
+                    if not 'src' in d or d['src'] == None:
+                        d['src'] = 'unknown'
+                    if not d['dev'] in rt:
+                        rt[d['dev']] = []
+                    rt[d['dev']].append({'src': d['src'], 'net': d['net']})
+                    rt['names']['byiface'][d['src']] = d['net']
+                    rt['names']['bynet'][d['net']] = d['src']
+            return rt
 
     def get_resolver(self,*args,**kwargs):
         resolv_lines=self.uncomment('/etc/resolv.conf')
@@ -174,13 +178,18 @@ class LlxNetwork(Detector):
         output=self.get_ifaces()
 
         for dev in output:
-            ip=output[dev]['ifaddr'].split('/')[0]
-            try:
-                output[dev]['net']=rt['names']['byiface'][ip]
-            except:
-                pass
+            if 'ifaddr' in output[dev] and output[dev]['ifaddr']:
+                ip=output[dev]['ifaddr'].split('/')[0]
+                try:
+                    output[dev]['net']=rt['names']['byiface'][ip]
+                except:
+                    pass
         output['routes']=rt
-        output['gw']=rt['names']['default']
+        if rt:
+            output['gw']=rt['names']['default']
+        else:
+            output['gw']=None
+
         resolv=self.get_resolver()
         output['resolver']=resolv
 

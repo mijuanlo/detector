@@ -1,18 +1,18 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="valentin" type="PythonConfigurationType" factoryName="Python" editBeforeRun="true" singleton="true">
+  <configuration default="false" name="sudo valentin create" type="PythonConfigurationType" factoryName="Python" editBeforeRun="true" singleton="true">
     <option name="INTERPRETER_OPTIONS" value="" />
     <option name="PARENT_ENVS" value="true" />
     <envs>
       <env name="PYTHONUNBUFFERED" value="1" />
     </envs>
-    <option name="SDK_HOME" value="/usr/bin/python2.7" />
+    <option name="SDK_HOME" value="$USER_HOME$/supython/bin/python" />
     <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
     <option name="IS_MODULE_SDK" value="false" />
     <option name="ADD_CONTENT_ROOTS" value="true" />
     <option name="ADD_SOURCE_ROOTS" value="true" />
     <module name="detector" />
     <option name="SCRIPT_NAME" value="$PROJECT_DIR$/valentin" />
-    <option name="PARAMETERS" value="-d debug -a valentin-info.tar.gz -s -r valentin.rules" />
+    <option name="PARAMETERS" value="-cf valentin-info.tar.gz" />
     <option name="SHOW_COMMAND_LINE" value="false" />
     <option name="EMULATE_TERMINAL" value="false" />
     <method />

@@ -11,6 +11,7 @@ class logger(logging.getLoggerClass()):
         self.l = None
         self.color = False
         self.level = logging.INFO
+        self.disabled = False
         super(logger,self).__init__(*args,**kwargs)
 
     def initLog(self,*args,**kwargs):
@@ -53,20 +54,27 @@ class logger(logging.getLoggerClass()):
         return self
 
     def debug(self,*args,**kwargs):
-        self.l.debug(*args,**kwargs)
+        if not self.disabled:
+            self.l.debug(*args,**kwargs)
     def warning(self,*args,**kwargs):
-        self.l.warning(*args,**kwargs)
+        if not self.disabled:
+            self.l.warning(*args,**kwargs)
     def error(self,*args,**kwargs):
-        self.l.error(*args,**kwargs)
+        if not self.disabled:
+            self.l.error(*args,**kwargs)
     def info(self,*args,**kwargs):
-        self.l.info(*args,**kwargs)
+        if not self.disabled:
+            self.l.info(*args,**kwargs)
     def set_level(self,*args,**kwargs):
         self.level=args[0]
         self.initLog()
     def set_color(self,*args,**kwargs):
         self.color=args[0]
         self.initLog()
-
+    def disable(self,*args,**kwargs):
+        self.disabled=True
+    def enable(self,*args,**kwargs):
+        self.disabled=False
 
 log=logger('main')
 log.initLog()

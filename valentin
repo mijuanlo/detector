@@ -55,14 +55,11 @@ def indent_var(st=u'',var={},indent=0):
 
 def make_file(capabilities,*args,**kwargs):
     try:
-        #txt = indent_var(var=capabilities)
         txt = json.dumps(capabilities,indent=4,separators=(',',':'),sort_keys=True)
-        if not kwargs['to_stdout']:
-            name = tempfile.mkstemp()[1]
-            with open(name,'w') as f:
-                f.write(txt.encode('utf-8'))
-            return name
-        return txt
+        name = tempfile.mkstemp()[1]
+        with open(name,'w') as f:
+            f.write(txt.encode('utf-8'))
+        return name
     except Exception as e:
         return False
 
@@ -94,7 +91,7 @@ def run_detection(*args,**kwargs):
     #hwd.all_plugins_are_needed=True
     if not run_in_debug():
         log.info('USING MAX_RUNNING_TIME !!!')
-        hwd.MAX_RUNNING_TIME = 5
+        hwd.MAX_RUNNING_TIME = 30
 
     #hwd.fake_capabilities={'IAMGOD':'yes'}
 
@@ -103,23 +100,23 @@ def run_detection(*args,**kwargs):
     #ret = hwd.run(needs=['LLXSYSTEM_TEST','LLXNETWORK_TEST'])
     ret = hwd.run()
 
-    try:
-        file = make_file(hwd.capabilities,**kwargs)
-        if kwargs['to_stdout']:
-            print(file)
-        else:
-            fname=make_tar(file,**kwargs)
-            log.info("File {} created".format(fname))
-    except Exception as e:
-        log.error("File creation unsuccessful "+str(e))
+    # try:
+    #     file = make_file(hwd.capabilities,**kwargs)
+    #     if kwargs['to_stdout']:
+    #         print(file)
+    #     else:
+    #         fname=make_tar(file,**kwargs)
+    #         log.info("File {} created".format(fname))
+    # except Exception as e:
+    #     log.error("File creation unsuccessful "+str(e))
 
     log.info("Total running time: {}".format(hwd.RUNNING_TIME))
 
-    return ret
+    return (ret,hwd.capabilities)
 
 def load_file(*args,**kwargs):
-    if kwargs.get('analyze_file',None):
-        filename = kwargs['analyze_file'][0]
+    if kwargs.get('fname',None):
+        filename = kwargs['fname']
     else:
         return False
     if os.path.exists(filename):
@@ -143,24 +140,20 @@ def load_file(*args,**kwargs):
         return False
 
 def run_analysis(*args,**kwargs):
-    fileinfo=load_file(*args,**kwargs)
-    if fileinfo:
-        fileinfo = json.loads(fileinfo)
-        if kwargs.get('suggest',None):
-            if kwargs.get('ruleset',None):
-                rs = ruleset()
-                try:
-                    rs.load_ruleset(fileruleset=kwargs['ruleset'][0],data=fileinfo)
-                    rs.make_tree()
-                    rs.make_suggestion()
-                except Exception as e:
-                    log.error(e)
-        else:
-            if kwargs.get('to_stdout'):
-                pr=indent_var(var=fileinfo)
-                sys.stdout.write(pr.encode('utf-8'))
-                sys.stderr.write('\n')
-        return True
+
+    if kwargs.get('capabilities',None):
+        fileinfo = kwargs.get('capabilities')
+    if kwargs.get('ruleset',None):
+        rs = ruleset()
+        try:
+            rs.load_ruleset(fileruleset=kwargs['ruleset'][0],data=fileinfo)
+            rs.make_tree()
+            rs.make_suggestion()
+        except Exception as e:
+            log.error(e)
+
+    return True
+
 
 if __name__ == '__main__':
     try:
@@ -168,15 +161,20 @@ if __name__ == '__main__':
         dlevels = ['debug','info','warning','error']
         parser.add_argument('-d','--debug-level',metavar='debug|info|warning|error',nargs='?',choices=dlevels,help='Set the debug level (default: warning)')
         parser.add_argument('-c','--coloured',action='store_const',help='Colorize logger messages',const=True)
+
         parser.add_argument('-f','--with-file',metavar='filename',nargs='?',help='Filename for results file (default valentin-info-(date).tar.gz')
         parser.add_argument('-o','--to-stdout',action='store_const',help='Output results to stdout',const=True)
+        parser.add_argument('-w','--to-stdout-raw',action='store_const',help='Output results to stdout in json format',const=True)
+
         parser.add_argument('-a','--analyze-file',metavar='filename',nargs=1,help='Filename to analyze')
+
         parser.add_argument('-s','--suggest',action='store_const',help='Suggest actions to repair system',const=True)
         parser.add_argument('-r','--ruleset',metavar='filename',nargs=1,help='Load ruleset when suggest user actions')
         args = parser.parse_args()
 
         if not args.debug_level:
-            log.set_level(logging.WARNING)
+            #log.set_level(logging.WARNING)
+            log.disable()
         else:
             levels={'debug':logging.DEBUG,'info':logging.INFO,'warning':logging.WARNING,'error':logging.ERROR}
             log.set_level(levels[args.debug_level.lower()])
@@ -184,19 +182,51 @@ if __name__ == '__main__':
         if args.coloured:
             log.set_color(True)
 
+        kw=vars(args)
+
         fname=None
         if args.with_file:
             fname=args.with_file
             if '.' not in fname:
                 fname = fname + '.tar.gz'
+            kw.update({'fname':fname})
 
-        kw=vars(args)
-        kw.update({'fname':fname})
-
-        if args.analyze_file or args.suggest:
-            ret=run_analysis(**vars(args))
+        if args.analyze_file:
+            fname=args.analyze_file[0]
+            kw.update({'fname':fname})
+            capabilities=load_file(**kw)
+            log.info("File {} loaded".format(fname))
+            if capabilities:
+                capabilities = json.loads(capabilities)
+                ret = True
+            else:
+                log.error("File {} can't be loaded".format(fname))
+                ret = False
         else:
-            ret=run_detection(**vars(args))
+            ret,capabilities=run_detection(**kw)
+            log.info('Detection done!')
+            if args.with_file:
+                try:
+                    file = make_file(capabilities,**kw)
+                    fname = make_tar(file,**kw)
+                    log.info("File {} created".format(fname))
+                except Exception as e:
+                    log.error("File creation unsuccessful "+str(e))
+
+        kw.update({'capabilities':capabilities})
+
+
+        if args.to_stdout or args.to_stdout_raw:
+            if args.to_stdout:
+                pr=indent_var(var=capabilities)
+            else:
+                pr=json.dumps(capabilities,indent=4,separators=(',',':'),sort_keys=True)
+            sys.stdout.write(pr.encode('utf-8'))
+            sys.stderr.write('\n')
+
+        if args.suggest:
+            ret=run_analysis(**kw)
+
 
         if ret:
             log.info("Exit code = 0")

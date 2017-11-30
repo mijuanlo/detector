@@ -5,6 +5,7 @@ import re
 T_COMMENT='#'
 T_MULTIPLE='*'
 T_CAPTURE='()'
+T_FIND='~'
 T_REPLACE='{}'
 T_SEP=','
 T_SPLIT='->'
@@ -13,16 +14,18 @@ T_CHILD='.'
 T_EQUAL='='
 T_NOT_EQUAL='!='
 T_LIKE='%'
+T_NOT_LIKE='!%'
 T_GT='<'
 T_LT='>'
 T_CONTAIN='%'
+T_EXISTENCE='@'
 L_STR=['\'','"']
 L_EMPTY=['\t',' ']
 
 class ruleset:
     def __init__(self):
         self.l_spliters=[T_COMMENT,T_SEP,T_SPLIT,T_HINT]
-        self.l_ops=[T_EQUAL,T_NOT_EQUAL,T_CAPTURE]
+        self.l_ops=[T_EQUAL,T_NOT_EQUAL,T_CAPTURE,T_EXISTENCE,T_LIKE,T_NOT_LIKE,T_LT,T_GT]
         self.l_template=[T_MULTIPLE,T_REPLACE]
         self.rules=[]
         self.data=None
@@ -112,6 +115,79 @@ class ruleset:
                 v[v2]=self.clean_quotes(v[v2])
             return v
 
+    def search_key_coincidence(self,search_on,key,fact,consequences,op,value,*args,**kwargs):
+        #fact_key=[]
+        done=False
+        found=None
+        key_split=key.split(T_CHILD)
+        len_split=len(key_split)
+        i=0
+        for levelkey in key_split:
+            i+=1
+            if not done and isinstance(search_on,dict):
+                #    raise Exception('Use of key \'{}\x' isn\'t permitted, only dict keys are matched in rules'.format(levelkey))
+                changed_key=None
+                for lkey in search_on.keys():
+                    if lkey != levelkey and lkey.lower() == levelkey.lower():
+                        changed_key=levelkey
+                        levelkey=lkey
+
+                if T_MULTIPLE in levelkey:
+                    searched_keys=[x for x in search_on.keys() if levelkey.replace(T_MULTIPLE,'') in x]
+                    if searched_keys:
+                        for r in searched_keys:
+                            new_fact=fact.replace(levelkey,r).strip()
+                            new_consequences=consequences.replace(T_REPLACE,r).strip()
+                            try:
+                                self.make_rule('{} -> {} '.format(new_fact,new_consequences))
+                                log.debug('Rule repetat: Unrolling to: {} -> {}'.format(new_fact,new_consequences))
+                            except:
+                                log.debug('Rule repeat: Cannot unroll to: {} -> {}'.format(new_fact,new_consequences))
+                        return None
+                    else:
+                        raise Exception('Can\'t apply template \'{}\''.format(levelkey))
+                else:
+                    if levelkey not in search_on.keys():
+                        raise Exception('Use of key \'{}\' not possible'.format(levelkey))
+                    #fact_key.append(levelkey)
+                    search_on=search_on[levelkey]
+                    if i == len_split:
+                        done=True
+
+            elif not done and isinstance(search_on,list):
+                for item in search_on:
+                    if T_FIND in levelkey:
+                        try:
+                            search,val=levelkey.split(T_FIND)
+                        except:
+                            raise Exception('Incorrect use for find token')
+                        lkeys=[key for key in item if search.lower() == key.lower()]
+                        if lkeys:
+                            search = lkeys[0]
+                        if val not in item[search]:
+                            found=False
+                            continue
+                        else:
+                            levelkey=search
+                            found=True
+
+                    if not done:
+                        try:
+                            search_on=self.search_key_coincidence(item,levelkey,fact,consequences,op,value)
+                            done=True
+                            break
+                        except:
+                            pass
+        if done:
+            return search_on
+        else:
+            if found == False:
+                return False
+            else:
+                return None
+
+
+
     def make_rule(self,*args,**kwargs):
         clean=lambda x: str(x).replace('\\','').strip()
         line=args[0]
@@ -134,32 +210,8 @@ class ruleset:
                     ftmp,vtmp=self.read_until(f,self.l_ops)
                 except Exception as e:
                     raise e
-                search_on=self.data
-                fact_key=[]
-                for levelkey in ftmp.split(T_CHILD):
-                    for lkey in search_on.keys():
-                        if lkey != levelkey and lkey.lower() == levelkey.lower():
-                            levelkey=lkey
-                    if T_MULTIPLE in levelkey:
-                        searched_keys=[x for x in search_on.keys() if levelkey.replace(T_MULTIPLE,'') in x]
-                        if searched_keys:
-                            for r in searched_keys:
-                                new_fact=f.replace(levelkey,r)
-                                new_consequences=consequences.replace(T_REPLACE,r)
-                                self.make_rule('{} -> {} '.format(new_fact,new_consequences))
-                            return
-                        else:
-                            raise Exception('Can\'t apply template \'{}\''.format(levelkey))
-                    else:
-                        if levelkey not in search_on.keys():
-                            raise Exception('Use of key \'{}\' not possible'.format(levelkey))
-                        fact_key.append(levelkey)
-                        search_on=search_on[levelkey]
-                #True key
-                #fact_key='.'.join(fact_key)
-                #self.data_values[fact_key]=search_on
-                #lower key
-                self.data_values[ftmp]=search_on
+
+                #first read operation
                 try:
                     op,vtmp=self.read_until(vtmp,self.l_ops,True)
                 except:
@@ -168,11 +220,21 @@ class ruleset:
                     raise Exception('Missing op')
                 if op not in self.l_ops:
                     raise Exception('Wrong op')
+
+                #read value
                 vtmp,end=self.read_until(vtmp,self.l_ops+self.l_spliters)
                 if vtmp == '' and op != T_CAPTURE:
                     raise Exception('Wrong value')
+
+                value=self.search_key_coincidence(self.data,ftmp,f,consequences,op,vtmp)
+                if value == None:
+                    return
+                self.data_values[ftmp]=value
+
                 if vtmp and op == T_CAPTURE:
-                    self.data.setdefault(vtmp,search_on)
+                    log.debug('Capturing {} to {} '.format(value,vtmp))
+                    self.data.setdefault(vtmp,value)
+
                 rule['facts'].append({'key':ftmp,'op':op,'value':vtmp})
         try:
             try:
@@ -191,11 +253,19 @@ class ruleset:
             rule['consequences']=lconsequences
             hints=hints[1:]
             try:
-                lhints=[clean(h) for h in hints.split(T_SEP)]
-                for h in lhints:
-                    if h[0] != h[-1] and h[0] not in L_STR:
-                        raise Exception('Hints mus\'t be enclosed with quotes')
-                rule['hints']=lhints
+                if hints:
+                    end=True
+                    lhints=[]
+                    while end:
+                        htmp,end=self.read_until(hints,[T_SEP])
+                        lhints.append(clean(htmp))
+                        hints=end[1:]
+
+                    #lhints=[clean(h) for h in hints.split(T_SEP)]
+                    for h in lhints:
+                        if h[0] != h[-1] and h[0] not in L_STR:
+                            raise Exception('Hints mus\'t be enclosed with quotes')
+                    rule['hints']=lhints
             except:
                 pass #hints are optional
             for k in ['facts','consequences','hints']:
@@ -233,7 +303,24 @@ class ruleset:
         for fact in lfacts:
             count_facts.setdefault(fact['key'],0)
             count_facts[fact['key']]+=1
+            log.debug('Ordering key {} = {}'.format(fact['key'],count_facts[fact['key']]))
         self.keys_ordered=sorted(count_facts,key=count_facts.get,reverse=True)
+
+        tmp_rules=[]
+        for key in self.keys_ordered:
+            for rule in self.rules:
+                found=False
+                for fact in rule['facts']:
+                    if fact['key'] == key:
+                        found=True
+                        break
+                if found:
+                    tmp_rules.append(rule)
+                    del self.rules[self.rules.index(rule)]
+
+        self.rules=tmp_rules
+
+        log.debug('Tree keys ordered: {}'.format(','.join(self.keys_ordered)))
 
 
     def apply_operation(self,fact):
@@ -252,9 +339,26 @@ class ruleset:
         elif op == T_LIKE:
             if value in data_value:
                 ret=True
+        elif op == T_NOT_LIKE:
+            if value not in data_value:
+                ret=True
         elif op == T_CAPTURE:
-            if data_value:
+            if self.data_values[key]:
                 return True
+        elif op == T_EXISTENCE:
+            try:
+                if self.data_values[key]:
+                    ret=True
+                else:
+                    ret=False
+            except:
+                ret=False
+
+            if value == 'exist':
+                return ret
+            else:
+                return not ret
+
         return ret
 
 
@@ -262,20 +366,37 @@ class ruleset:
         def make_banner(st):
             return '{}\n{}'.format(st,'-'*len(st))
 
-        rules_match=[]
         for key in self.keys_ordered:
-            for rule in self.rules:
-                for fact in rule['facts']:
-                    if fact.get('key') == key:
-                        #print '{}'.format(fact)
-                        if self.apply_operation(fact):
-                            #print '{} False'.format(fact)
-                            rules_match.append(rule)
-                        #else:
-                            #print '{} True'.format(fact)
-        if rules_match:
-            print make_banner('Detected:')
-        for rule in rules_match:
+            rule_idx=0
+            while rule_idx < len (self.rules):
+                rule=self.rules[rule_idx]
+                rulekeys=[fact['key'] for fact in rule['facts']]
+                if key not in rulekeys:
+                    rule_idx+=1
+                else:
+                    clean=None
+                    for fact in rule['facts']:
+                        if key == fact['key']:
+                            if self.apply_operation(fact):
+                                clean = False
+                            else:
+                                clean = True
+                                break
+                    if clean:
+                        del self.rules[rule_idx]
+                        #break
+                        #rule_idx+=1
+                    elif clean==False:
+                        #break
+                        rule_idx+=1
+                        pass
+
+
+        out={'banner':None,'c':[],'h':[]}
+        if self.rules:
+            out['banner']=make_banner('Detected:')
+
+        for rule in self.rules:
             for c in rule['consequences']:
                 key=rule['facts'][0].get('key','None')
                 keyval=self.data_values.get(key,None)
@@ -283,15 +404,27 @@ class ruleset:
                     if T_REPLACE in c:
                         try:
                             for li in keyval:
-                                print '{}!'.format(c.replace(T_REPLACE,str(li)))
+                                out['c'].append('-{}!'.format(c.replace(T_REPLACE,str(li))))
                         except:
-                            print '{}!'.format(c.replace(T_REPLACE,keyval))
+                            out['c'].append('-{}!'.format(c.replace(T_REPLACE,keyval)))
                     else:
-                        print '{}!'.format(c)
-            if rule['hints']:
-                print ''
-                print make_banner('Things that you can do:')
-                for suggestion in rule['hints']:
-                    print '-{}'.format(suggestion)
-                print ''
+                        out['c'].append('-{}!'.format(c))
+                else:
+                    out['c'].append('-{}!'.format(c))
 
+            if rule['hints']:
+                for suggestion in rule['hints']:
+                    out['h'].append('-{}'.format(suggestion))
+
+        if out['c']:
+            print out['banner']
+            for c in out['c']:
+                print c
+
+        if out['h']:
+            print '\n'+make_banner('Things that you can do:')
+            for h in out['h']:
+                print h
+        else:
+            if out['c']:
+                print '\n'+make_banner('You don\'t need to do any actions')
