@@ -1,10 +1,10 @@
 <application>
   <component name="FindSettings">
-    <option name="customScope" value="All Places" />
-    <option name="defaultScopeName" value="All Places" />
+    <option name="customScope" value="File '[statisticsv2] - .../analytics.py'" />
+    <option name="defaultScopeName" value="File '[statisticsv2] - .../analytics.py'" />
     <option name="regularExpressions" value="true" />
     <option name="REGULAR_EXPRESSIONS" value="true" />
-    <option name="SEARCH_SCOPE" value="All Places" />
+    <option name="SEARCH_SCOPE" value="File '[statisticsv2] - .../analytics.py'" />
     <option name="FILE_MASK" value="*.py" />
   </component>
 </application>
